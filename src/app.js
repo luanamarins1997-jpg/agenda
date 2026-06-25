@@ -299,48 +299,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (evt) showDetail(evt);
       });
     });
-
-    // Append highlight canvases
-    weekGrid.querySelectorAll('[data-date]').forEach(col => {
-      const ds = col.dataset.date;
-      const hData = drawingStore[`${ds}-highlight`];
-      if (!hData?.strokes?.length) return;
-      const content = col.querySelector('.week-content');
-      if (!content) return;
-      const allPts = hData.strokes.flat();
-      const minX = Math.min(...allPts.map(p => p.x)), maxX = Math.max(...allPts.map(p => p.x));
-      const minY = Math.min(...allPts.map(p => p.y)), maxY = Math.max(...allPts.map(p => p.y));
-      const ox = minX, oy = minY, rX = maxX - minX || 1, rY = maxY - minY || 1;
-
-      const wrap = document.createElement('div');
-      wrap.style.cssText = 'position:relative;height:70px;margin-bottom:4px;border-radius:6px;overflow:hidden;background:rgba(4,89,197,0.04)';
-      const cvs = document.createElement('canvas');
-      cvs.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
-      cvs.width = 1; cvs.height = 1;
-      wrap.appendChild(cvs);
-      content.prepend(wrap);
-
-      requestAnimationFrame(() => {
-        const w = cvs.clientWidth || 80;
-        const h = 70;
-        if (w < 10) return;
-        cvs.width = w * 2; cvs.height = h * 2;
-        const s = Math.min(w / rX, h / rY);
-        const offX = (w - rX * s) / 2, offY = (h - rY * s) / 2;
-        const c = cvs.getContext('2d');
-        c.scale(2, 2);
-        hData.strokes.forEach(stroke => {
-          if (stroke.length < 2) return;
-          c.beginPath();
-          c.moveTo((stroke[0].x - ox) * s + offX, (stroke[0].y - oy) * s + offY);
-          for (let j = 1; j < stroke.length; j++) c.lineTo((stroke[j].x - ox) * s + offX, (stroke[j].y - oy) * s + offY);
-          c.strokeStyle = '#1a1b1f';
-          c.lineWidth = Math.max(1, 1.5 / s * 0.3);
-          c.lineCap = 'round';
-          c.stroke();
-        });
-      });
-    });
   }
 
   // --- Drawing Store ---

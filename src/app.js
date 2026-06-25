@@ -629,8 +629,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const events = App.getEventsForMonth(year, m);
 
       html += `<div class="year-month-card" data-month="${m}" data-year="${year}">`;
-      html += `<div class="font-headline-sm text-[13px] text-primary mb-1.5 font-semibold">${App.getShortMonthName(m)}</div>`;
-      html += `<div class="grid grid-cols-7 gap-0">`;
+      html += `<div class="font-headline-sm text-[14px] text-primary mb-1.5 font-semibold">${App.getShortMonthName(m)}</div>`;
+      html += `<div class="grid grid-cols-7 gap-0 justify-items-center">`;
       ['D','S','T','Q','Q','S','S'].forEach(day => {
         html += `<span class="text-center text-[8px] text-secondary font-semibold leading-tight">${day}</span>`;
       });
@@ -640,7 +640,8 @@ document.addEventListener('DOMContentLoaded', () => {
       for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const isToday = dateStr === '2026-06-25';
-        html += `<span class="text-center text-[9px] leading-snug ${isToday ? 'bg-primary text-white rounded-full w-4 h-4 inline-flex items-center justify-center' : ''}">${day}</span>`;
+        const cls = isToday ? 'bg-primary text-white rounded-full w-4.5 h-4.5 inline-flex items-center justify-center' : '';
+        html += `<span class="text-center text-[10px] leading-snug ${cls}">${day}</span>`;
       }
       html += `</div>`;
       html += `</div>`;

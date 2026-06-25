@@ -34,11 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const detailOverlay = $('detail-overlay');
   const detailContent = $('detail-content');
   const fab = $('fab');
-  const menuToggle = $('menu-toggle');
-  const menuDropdown = $('menu-dropdown');
-  const menuTodayBtn = $('menu-today-btn');
-  const quickDay = $('quick-day');
-  const quickMonth = $('quick-month');
   const navBtns = document.querySelectorAll('.nav-btn');
 
   let editingNoteId = null;
@@ -69,72 +64,11 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (viewName === 'notes') renderNotes();
     updateDaySidebar();
     updateNextEvent();
-    updateQuickBtns(viewName);
   }
 
   navBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      switchView(btn.dataset.view);
-      closeMenu();
-    });
+    btn.addEventListener('click', () => switchView(btn.dataset.view));
   });
-
-  // Menu toggle
-  function closeMenu() {
-    if (menuDropdown) menuDropdown.style.display = 'none';
-  }
-
-  function showMenu() {
-    if (menuDropdown) menuDropdown.style.display = '';
-  }
-
-  function toggleMenu() {
-    if (!menuDropdown) return;
-    if (menuDropdown.style.display === 'none') {
-      menuDropdown.style.display = '';
-    } else {
-      menuDropdown.style.display = 'none';
-    }
-  }
-
-  if (menuToggle) {
-    menuToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleMenu();
-    });
-  }
-
-  document.addEventListener('click', (e) => {
-    if (!menuDropdown || menuDropdown.style.display === 'none') return;
-    if (!menuDropdown.contains(e.target) && e.target !== menuToggle) {
-      closeMenu();
-    }
-  });
-
-  if (menuTodayBtn) {
-    menuTodayBtn.addEventListener('click', () => {
-      App.setState({ currentDate: new Date(2026, 5, 22) });
-      switchView(App.getState().currentView);
-      closeMenu();
-    });
-  }
-
-  // Quick view toggle
-  function updateQuickBtns(view) {
-    if (quickDay) {
-      quickDay.classList.toggle('opacity-40', view !== 'day');
-      quickDay.classList.toggle('text-primary', view === 'day');
-      quickDay.classList.toggle('bg-primary/10', view === 'day');
-    }
-    if (quickMonth) {
-      quickMonth.classList.toggle('opacity-40', view !== 'month');
-      quickMonth.classList.toggle('text-primary', view === 'month');
-      quickMonth.classList.toggle('bg-primary/10', view === 'month');
-    }
-  }
-
-  if (quickDay) quickDay.addEventListener('click', () => { if (App.getState().currentView !== 'day') switchView('day'); });
-  if (quickMonth) quickMonth.addEventListener('click', () => { if (App.getState().currentView !== 'month') switchView('month'); });
 
   // --- Top Bar ---
   function updateTopBar() {

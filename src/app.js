@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const detailOverlay = $('detail-overlay');
   const detailContent = $('detail-content');
   const fab = $('fab');
+  const menuToggle = $('menu-toggle');
+  const menuDropdown = $('menu-dropdown');
+  const menuTodayBtn = $('menu-today-btn');
   const navBtns = document.querySelectorAll('.nav-btn');
 
   let editingNoteId = null;
@@ -67,8 +70,38 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   navBtns.forEach(btn => {
-    btn.addEventListener('click', () => switchView(btn.dataset.view));
+    btn.addEventListener('click', () => {
+      switchView(btn.dataset.view);
+      closeMenu();
+    });
   });
+
+  // Menu toggle
+  function closeMenu() {
+    if (menuDropdown) menuDropdown.classList.add('hidden');
+  }
+
+  if (menuToggle) {
+    menuToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      menuDropdown.classList.toggle('hidden');
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (menuDropdown && !menuDropdown.classList.contains('hidden') &&
+        !menuDropdown.contains(e.target) && e.target !== menuToggle) {
+      closeMenu();
+    }
+  });
+
+  if (menuTodayBtn) {
+    menuTodayBtn.addEventListener('click', () => {
+      App.setState({ currentDate: new Date(2026, 5, 22) });
+      switchView(App.getState().currentView);
+      closeMenu();
+    });
+  }
 
   // --- Top Bar ---
   function updateTopBar() {

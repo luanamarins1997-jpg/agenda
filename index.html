@@ -71,24 +71,61 @@
 </head>
 <body class="bg-surface text-on-surface h-screen overflow-hidden flex flex-col">
   <!-- Top Navigation Bar -->
-  <header class="flex items-center justify-between px-3 py-3 bg-surface border-b border-outline-variant shrink-0 z-20" style="padding-top:max(12px,env(safe-area-inset-top,12px))">
+  <header class="flex items-center justify-between px-2 py-2 bg-surface border-b border-outline-variant shrink-0 z-20" style="padding-top:max(8px,env(safe-area-inset-top,8px))">
     <div class="flex items-center gap-1">
-      <button class="nav-btn flex items-center justify-center w-11 h-11 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all" data-view="day" title="DIA">
-        <span class="material-symbols-outlined text-[22px]">calendar_view_day</span>
+      <button id="menu-toggle" class="flex items-center justify-center w-9 h-9 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all" title="Menu">
+        <span class="material-symbols-outlined text-[22px]">menu</span>
       </button>
-      <button class="nav-btn flex items-center justify-center w-11 h-11 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all" data-view="week" title="SEMANA">
-        <span class="material-symbols-outlined text-[22px]">calendar_view_week</span>
+      <div class="w-px h-5 bg-outline-variant/30 mx-1"></div>
+      <button id="nav-prev" class="flex items-center justify-center w-9 h-9 rounded-xl text-on-surface-variant hover:bg-surface-container-low">
+        <span class="material-symbols-outlined text-[18px]">chevron_left</span>
       </button>
-      <button class="nav-btn active flex items-center justify-center w-11 h-11 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all" data-view="month" title="MÊS">
-        <span class="material-symbols-outlined text-[22px]">calendar_view_month</span>
-      </button>
-      <button class="nav-btn flex items-center justify-center w-11 h-11 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all" data-view="year" title="ANO">
-        <span class="material-symbols-outlined text-[22px]">calendar_today</span>
-      </button>
-      <button class="nav-btn flex items-center justify-center w-11 h-11 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all" data-view="notes" title="NOTAS">
-        <span class="material-symbols-outlined text-[22px]">sticky_note_2</span>
+      <div class="text-center min-w-[120px]">
+        <h2 id="topbar-title" class="font-headline-sm text-[14px] text-on-surface leading-tight">Junho 2026</h2>
+        <p id="topbar-subtitle" class="font-body-sm text-[10px] text-on-surface-variant/60 hidden leading-none"></p>
+      </div>
+      <button id="nav-next" class="flex items-center justify-center w-9 h-9 rounded-xl text-on-surface-variant hover:bg-surface-container-low">
+        <span class="material-symbols-outlined text-[18px]">chevron_right</span>
       </button>
     </div>
+    <div class="flex items-center gap-1">
+      <button id="nav-today" class="px-3 py-1.5 bg-primary text-on-primary rounded-lg text-[11px] font-semibold hover:opacity-90">
+        Hoje
+      </button>
+    </div>
+  </header>
+
+  <!-- Dropdown Menu -->
+  <div id="menu-dropdown" class="hidden fixed left-2 top-20 z-30 bg-surface rounded-2xl shadow-2xl border border-outline-variant overflow-hidden" style="padding-top:max(8px,env(safe-area-inset-top,8px))">
+    <div class="p-2 flex flex-col gap-0.5 min-w-[200px]">
+      <button class="nav-btn flex items-center gap-3 w-full px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all text-[14px]" data-view="day">
+        <span class="material-symbols-outlined text-[22px]">calendar_view_day</span>
+        <span class="font-body-md font-medium">DIA</span>
+      </button>
+      <button class="nav-btn flex items-center gap-3 w-full px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all text-[14px]" data-view="week">
+        <span class="material-symbols-outlined text-[22px]">calendar_view_week</span>
+        <span class="font-body-md font-medium">SEMANA</span>
+      </button>
+      <button class="nav-btn flex items-center gap-3 w-full px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all text-[14px]" data-view="month">
+        <span class="material-symbols-outlined text-[22px]">calendar_view_month</span>
+        <span class="font-body-md font-medium">MÊS</span>
+      </button>
+      <button class="nav-btn flex items-center gap-3 w-full px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all text-[14px]" data-view="year">
+        <span class="material-symbols-outlined text-[22px]">calendar_today</span>
+        <span class="font-body-md font-medium">ANO</span>
+      </button>
+      <button class="nav-btn flex items-center gap-3 w-full px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all text-[14px]" data-view="notes">
+        <span class="material-symbols-outlined text-[22px]">sticky_note_2</span>
+        <span class="font-body-md font-medium">NOTAS</span>
+      </button>
+      <div class="border-t border-outline-variant/30 my-1 pt-1">
+        <button id="menu-today-btn" class="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-primary hover:bg-primary/5 transition-all text-[14px]">
+          <span class="material-symbols-outlined text-[22px]">today</span>
+          <span class="font-body-md font-medium">Ir para hoje</span>
+        </button>
+      </div>
+    </div>
+  </div>
     <div class="flex items-center gap-3">
       <button id="nav-prev" class="p-1.5 hover:bg-surface-container-low rounded-lg">
         <span class="material-symbols-outlined text-[18px] text-on-surface-variant">chevron_left</span>

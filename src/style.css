@@ -113,10 +113,9 @@
   border-right: none;
 }
 .year-month-card {
-  aspect-ratio: 1;
   border: 1px solid #e5e5ea;
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 6px;
+  padding: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
 }

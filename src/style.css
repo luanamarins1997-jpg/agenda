@@ -169,7 +169,7 @@
 
 .draw-canvas {
   display: block;
-  touch-action: manipulation;
+  touch-action: none;
   cursor: crosshair;
   position: absolute;
   top: 0;

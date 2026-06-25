@@ -114,12 +114,13 @@
 }
 .year-month-card {
   border: 1px solid #e5e5ea;
-  border-radius: 8px;
-  padding: 10px;
+  border-radius: 6px;
+  padding: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 .year-month-card:hover {
   background-color: rgba(4, 89, 197, 0.02);

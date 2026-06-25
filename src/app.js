@@ -25,9 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const navPrev = $('nav-prev');
   const navNext = $('nav-next');
   const navToday = $('nav-today');
-  const sidebarMiniCal = $('sidebar-minical');
+  const daySidebar = $('day-sidebar');
   const sidebarNextEvent = $('sidebar-next-event');
   const sidebarHighlight = $('sidebar-highlight');
+  const sidebarDayName = $('sidebar-day-name');
+  const sidebarDayNumber = $('sidebar-day-number');
+  const sidebarDayMonth = $('sidebar-day-month');
   const detailOverlay = $('detail-overlay');
   const detailContent = $('detail-content');
   const fab = $('fab');
@@ -36,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let editingNoteId = null;
   let highlightCanvasInited = false;
   let highlightInstance = null;
+  let zoomLevel = 1;
 
   // --- Navigation ---
   function switchView(viewName) {
@@ -44,8 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
     navBtns.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.view === viewName);
     });
-    if (sidebarHighlight) {
-      sidebarHighlight.classList.toggle('hidden', viewName !== 'day');
+    if (daySidebar) {
+      daySidebar.classList.toggle('hidden', viewName !== 'day');
     }
     if (viewName === 'month') viewMonth.classList.add('active');
     else if (viewName === 'week') viewWeek.classList.add('active');
@@ -58,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (viewName === 'day') renderDay();
     else if (viewName === 'year') renderYear();
     else if (viewName === 'notes') renderNotes();
-    updateMiniCalendar();
+    updateDaySidebar();
     updateNextEvent();
   }
 
@@ -227,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
             App.setState({ currentDate: clickDate });
             renderMonth();
             updateTopBar();
-            updateMiniCalendar();
+            updateDaySidebar();
             return;
           }
           App.setState({ currentDate: clickDate });
@@ -475,10 +479,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const dayEvents = App.getEventsForDate(dateStr);
 
     let html = `<div class="day-toolbar">
-      <button id="clear-day-btn" class="text-secondary hover:text-error transition-colors">
+      <button id="clear-day-btn" class="text-secondary hover:text-error transition-colors" title="Limpar escritas">
         <span class="material-symbols-outlined text-[18px] align-middle">ink_eraser</span>
-        Limpar
       </button>
+      <div class="flex items-center gap-1 ml-2 border-l border-outline-variant/30 pl-2">
+        <button id="zoom-out" class="text-secondary hover:text-primary transition-colors" title="Reduzir zoom">
+          <span class="material-symbols-outlined text-[18px] align-middle">zoom_out</span>
+        </button>
+        <span id="zoom-label" class="font-label-mono text-[10px] text-secondary w-8 text-center">100%</span>
+        <button id="zoom-in" class="text-secondary hover:text-primary transition-colors" title="Aumentar zoom">
+          <span class="material-symbols-outlined text-[18px] align-middle">zoom_in</span>
+        </button>
+      </div>
       <span class="text-[11px] text-on-surface-variant/40 font-body-sm ml-auto">Escreva com a caneta</span>
     </div>`;
 
@@ -588,6 +600,52 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (highlightInstance) {
       highlightInstance.reload(highlightKey);
     }
+
+    // Zoom controls
+    function applyZoom(level) {
+      zoomLevel = Math.min(3, Math.max(0.5, level));
+      dayGrid.style.transform = `scale(${zoomLevel})`;
+      const lbl = document.getElementById('zoom-label');
+      if (lbl) lbl.textContent = `${Math.round(zoomLevel * 100)}%`;
+    }
+
+    const zoomIn = document.getElementById('zoom-in');
+    const zoomOut = document.getElementById('zoom-out');
+    if (zoomIn) zoomIn.addEventListener('click', () => applyZoom(zoomLevel + 0.25));
+    if (zoomOut) zoomOut.addEventListener('click', () => applyZoom(zoomLevel - 0.25));
+
+    // Pinch-to-zoom on the scroll parent
+    const scrollParent = dayGrid.closest('.overflow-auto');
+    if (scrollParent) {
+      let touches = [];
+      scrollParent.addEventListener('pointerdown', e => {
+        touches = touches.filter(t => t.id !== e.pointerId);
+        touches.push({ id: e.pointerId, x: e.clientX, y: e.clientY });
+      });
+      scrollParent.addEventListener('pointermove', e => {
+        const t = touches.find(t => t.id === e.pointerId);
+        if (!t) return;
+        const prevX = t.x, prevY = t.y;
+        t.x = e.clientX; t.y = e.clientY;
+        if (touches.length !== 2) return;
+        const other = touches.find(t2 => t2.id !== e.pointerId);
+        if (!other) return;
+        const dx = other.x - t.x, dy = other.y - t.y;
+        const dist = Math.hypot(dx, dy);
+        if (!t._pinchDist) { t._pinchDist = dist; return; }
+        const delta = dist / t._pinchDist;
+        if (Math.abs(delta - 1) > 0.02) applyZoom(zoomLevel * delta);
+        t._pinchDist = dist;
+      });
+      scrollParent.addEventListener('pointerup', e => {
+        touches = touches.filter(t => t.id !== e.pointerId);
+      });
+      scrollParent.addEventListener('pointercancel', e => {
+        touches = touches.filter(t => t.id !== e.pointerId);
+      });
+    }
+
+    applyZoom(zoomLevel);
   }
 
   // --- Year View ---
@@ -706,68 +764,13 @@ document.addEventListener('DOMContentLoaded', () => {
     closeNotesEditor();
   });
 
-  // --- Sidebar Mini Calendar ---
-  function updateMiniCalendar() {
+  // --- Sidebar Day Info ---
+  function updateDaySidebar() {
+    if (!sidebarDayName || !sidebarDayNumber || !sidebarDayMonth) return;
     const d = App.getState().currentDate;
-    const year = d.getFullYear();
-    const month = d.getMonth();
-    const daysInMonth = App.getDaysInMonth(year, month);
-    const firstDay = App.getFirstDayOfMonth(year, month);
-
-    let html = `<div class="flex justify-between items-center mb-3 px-1">`;
-    html += `<span class="font-label-mono text-[10px] text-on-surface">${App.getShortMonthName(month)} ${year}</span>`;
-    html += `<div class="flex gap-1">
-      <span class="material-symbols-outlined text-sm cursor-pointer hover:text-primary" id="minical-prev">chevron_left</span>
-      <span class="material-symbols-outlined text-sm cursor-pointer hover:text-primary" id="minical-next">chevron_right</span>
-    </div>`;
-    html += `</div>`;
-    html += `<div class="grid grid-cols-7 gap-y-2 text-center">`;
-    ['S','T','Q','Q','S','S','D'].forEach(day => {
-      html += `<span class="text-[9px] font-bold text-secondary">${day}</span>`;
-    });
-    const mondayOffset = (firstDay + 6) % 7;
-    for (let i = 0; i < mondayOffset; i++) {
-      html += `<span></span>`;
-    }
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const isToday = year === 2026 && month === 5 && day === 22;
-      const hasHighlight = drawingStore[`${dateStr}-highlight`]?.strokes?.length > 0;
-      html += `<div class="flex flex-col items-center cursor-pointer minical-day" data-date="${dateStr}">`;
-      html += `<span class="text-[10px] leading-tight ${isToday ? 'w-5 h-5 flex items-center justify-center bg-primary text-white rounded-full' : 'text-on-surface hover:text-primary'}">${day}</span>`;
-      if (hasHighlight) html += `<span class="w-1 h-1 rounded-full bg-primary mt-0.5"></span>`;
-      html += `</div>`;
-    }
-    html += `</div>`;
-    sidebarMiniCal.innerHTML = html;
-    sidebarMiniCal.querySelectorAll('.minical-day').forEach(el => {
-      el.addEventListener('click', () => {
-        const ds = el.dataset.date;
-        if (!ds) return;
-        const p = ds.split('-');
-        App.setState({ currentDate: new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2])) });
-        switchView('day');
-      });
-    });
-
-    const prev = document.getElementById('minical-prev');
-    const next = document.getElementById('minical-next');
-    if (prev) prev.addEventListener('click', () => {
-      const cd = App.getState().currentDate;
-      cd.setMonth(cd.getMonth() - 1);
-      App.setState({ currentDate: cd });
-      updateMiniCalendar();
-      updateTopBar();
-      if (App.getState().currentView === 'month') renderMonth();
-    });
-    if (next) next.addEventListener('click', () => {
-      const cd = App.getState().currentDate;
-      cd.setMonth(cd.getMonth() + 1);
-      App.setState({ currentDate: cd });
-      updateMiniCalendar();
-      updateTopBar();
-      if (App.getState().currentView === 'month') renderMonth();
-    });
+    sidebarDayName.textContent = App.getFullDayName(d.getDay());
+    sidebarDayNumber.textContent = d.getDate();
+    sidebarDayMonth.textContent = `${App.getMonthName(d.getMonth()).toUpperCase()} ${d.getFullYear()}`;
   }
 
   // --- Sidebar Next Event ---

@@ -628,8 +628,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const events = App.getEventsForMonth(year, m);
 
       html += `<div class="year-month-card" data-month="${m}" data-year="${year}">`;
-      html += `<div class="font-headline-sm text-[11px] text-primary mb-1 font-semibold">${App.getShortMonthName(m)}</div>`;
-      html += `<div class="grid grid-cols-7 gap-0 flex-1 items-start">`;
+      html += `<div class="font-headline-sm text-[12px] text-primary mb-1.5 font-semibold">${App.getShortMonthName(m)}</div>`;
+      html += `<div class="grid grid-cols-7 gap-0">`;
       ['D','S','T','Q','Q','S','S'].forEach(day => {
         html += `<span class="text-center text-[7px] text-secondary font-semibold leading-tight">${day}</span>`;
       });
@@ -641,7 +641,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const isToday = dateStr === '2026-06-25';
         html += `<span class="text-center text-[8px] leading-tight ${isToday ? 'bg-primary text-white rounded-full w-3.5 h-3.5 inline-flex items-center justify-center' : ''}">${day}</span>`;
       }
-      html += `</div>`;
       html += `</div>`;
       html += `</div>`;
     }

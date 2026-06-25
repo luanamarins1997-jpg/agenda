@@ -114,21 +114,16 @@
 }
 .year-month-card {
   border: 1px solid #e5e5ea;
-  border-radius: 6px;
-  padding: 6px;
+  border-radius: 8px;
+  padding: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
-  min-height: 0;
 }
 .year-month-card:hover {
-  background-color: rgba(4, 89, 197, 0.02);
-  box-shadow: 0px 2px 12px rgba(0,0,0,0.05);
-}
-.year-month-card:hover {
-  background-color: rgba(4, 89, 197, 0.02);
-  box-shadow: 0px 4px 20px rgba(0,0,0,0.05);
+  background-color: rgba(4, 89, 197, 0.03);
+  box-shadow: 0px 2px 8px rgba(0,0,0,0.06);
 }
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);

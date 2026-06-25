@@ -205,25 +205,29 @@ document.addEventListener('DOMContentLoaded', () => {
           const cvs = document.createElement('canvas');
           cvs.width = 1;
           cvs.height = 1;
-          cvs.style.cssText = 'position:absolute;left:2px;right:2px;bottom:2px;height:40%;pointer-events:none;border-radius:3px;background:rgba(4,89,197,0.05);border:1px solid rgba(4,89,197,0.08)';
-          const fallbackW = (monthGrid.clientWidth / 7 || 171) - 6;
+          cvs.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
+          const fallbackW = monthGrid.clientWidth / 7 || 171;
           const drawOnCanvas = () => {
-            const w = cell.clientWidth - 6 || fallbackW;
-            const h = Math.min(cell.clientHeight * 0.4 || 40, 60);
-            if (w < 10 || h < 10) return;
+            const w = cell.clientWidth || fallbackW;
+            const h = cell.clientHeight || 80;
+            if (w < 20 || h < 20) return;
+            const pad = { top: 22, bottom: 4, left: 4, right: 4 };
+            const dw = w - pad.left - pad.right;
+            const dh = h - pad.top - pad.bottom;
+            if (dw < 10 || dh < 10) return;
             cvs.width = w * 2;
             cvs.height = h * 2;
             cvs.style.width = w + 'px';
             cvs.style.height = h + 'px';
-            const s = Math.min(w / rangeX * 0.9, h / rangeY * 0.9);
-            const offsetX = (w - rangeX * s) / 2;
-            const offsetY = (h - rangeY * s) / 2;
+            const s = Math.min(dw / rangeX, dh / rangeY) * 0.85;
+            const offsetX = pad.left + (dw - rangeX * s) / 2;
+            const offsetY = pad.top + (dh - rangeY * s) / 2;
             const c = cvs.getContext('2d');
             c.scale(2, 2);
-            c.lineWidth = Math.min(2.5, Math.max(1, 2 / s));
             c.strokeStyle = '#1a1b1f';
             c.lineCap = 'round';
             c.lineJoin = 'round';
+            c.lineWidth = Math.max(1, 1.5 / s * 0.4);
             hData.strokes.forEach(stroke => {
               if (stroke.length < 2) return;
               c.beginPath();

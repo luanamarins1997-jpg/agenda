@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let editingNoteId = null;
   let highlightCanvasInited = false;
   let highlightInstance = null;
-  let zoomLevel = 1;
+
 
   // --- Navigation ---
   function switchView(viewName) {
@@ -359,8 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getPos(e) {
       const rect = canvas.getBoundingClientRect();
-      const z = zoomLevel || 1;
-      return { x: (e.clientX - rect.left) / z, y: (e.clientY - rect.top) / z, pressure: e.pressure || 0.5 };
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top, pressure: e.pressure || 0.5 };
     }
 
     function redraw() {
@@ -539,15 +538,6 @@ document.addEventListener('DOMContentLoaded', () => {
       <button id="clear-day-btn" class="text-secondary hover:text-error transition-colors" title="Limpar escritas">
         <span class="material-symbols-outlined text-[18px] align-middle">ink_eraser</span>
       </button>
-      <div class="flex items-center gap-1 ml-2 border-l border-outline-variant/30 pl-2">
-        <button id="zoom-out" class="text-secondary hover:text-primary transition-colors" title="Reduzir zoom">
-          <span class="material-symbols-outlined text-[18px] align-middle">zoom_out</span>
-        </button>
-        <span id="zoom-label" class="font-label-mono text-[10px] text-secondary w-8 text-center">100%</span>
-        <button id="zoom-in" class="text-secondary hover:text-primary transition-colors" title="Aumentar zoom">
-          <span class="material-symbols-outlined text-[18px] align-middle">zoom_in</span>
-        </button>
-      </div>
       <span class="text-[11px] text-on-surface-variant/40 font-body-sm ml-auto">Escreva com a caneta</span>
     </div>`;
 
@@ -658,22 +648,9 @@ document.addEventListener('DOMContentLoaded', () => {
       highlightInstance.reload(highlightKey);
     }
 
-    // Zoom controls
-    dayGrid.style.transition = 'transform 0.15s ease';
-
-    function applyZoom(level) {
-      zoomLevel = Math.min(3, Math.max(0.5, level));
-      dayGrid.style.transform = `scale(${zoomLevel})`;
-      const lbl = document.getElementById('zoom-label');
-      if (lbl) lbl.textContent = `${Math.round(zoomLevel * 100)}%`;
-    }
-
-    const zoomIn = document.getElementById('zoom-in');
-    const zoomOut = document.getElementById('zoom-out');
-    if (zoomIn) zoomIn.addEventListener('click', () => applyZoom(zoomLevel + 0.25));
-    if (zoomOut) zoomOut.addEventListener('click', () => applyZoom(zoomLevel - 0.25));
-
-    applyZoom(zoomLevel);
+    // Remove any custom zoom transform
+    dayGrid.style.transform = '';
+    dayGrid.style.transition = '';
   }
 
   // --- Year View ---

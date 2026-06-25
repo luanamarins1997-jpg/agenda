@@ -527,6 +527,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: false });
 
     scrollEl.addEventListener('touchmove', (e) => {
+      // Enquanto a caneta desenha, trava qualquer rolagem (a stylus tambem
+      // gera toques que rolavam a tela de lado durante a escrita com zoom).
+      if (penDrawing) { e.preventDefault(); return; }
       if (!pinching) return;
       const f = fingers(e);
       if (f.length < 2) { pinching = false; return; }

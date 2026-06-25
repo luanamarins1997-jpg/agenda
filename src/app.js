@@ -194,29 +194,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!ds) return;
       const hData = drawingStore[`${ds}-highlight`];
       if (hData?.strokes?.length > 0) {
-        const allPts = hData.strokes.flat();
-        const minX = Math.min(...allPts.map(p => p.x)), maxX = Math.max(...allPts.map(p => p.x));
-        const minY = Math.min(...allPts.map(p => p.y)), maxY = Math.max(...allPts.map(p => p.y));
-        const rangeX = maxX - minX || 1, rangeY = maxY - minY || 1;
-        const s = Math.min(171.04 / rangeX, 120 / rangeY);
-        const ox = minX, oy = minY;
-
-        const cvs = document.createElement('canvas');
-        cvs.className = 'mt-1 rounded block mx-auto';
-        cvs.width = 171.04;
-        cvs.height = 120;
-        const c = cvs.getContext('2d');
-        hData.strokes.forEach(stroke => {
-          if (stroke.length < 2) return;
-          c.beginPath();
-          c.moveTo((stroke[0].x - ox) * s, (stroke[0].y - oy) * s + 2);
-          for (let i = 1; i < stroke.length; i++) c.lineTo((stroke[i].x - ox) * s, (stroke[i].y - oy) * s + 2);
-          c.strokeStyle = '#1a1b1f';
-          c.lineWidth = Math.max(1, 1.5 / s * 0.4);
-          c.lineCap = 'round';
-          c.stroke();
-        });
-        cell.appendChild(cvs);
+        const bar = document.createElement('div');
+        bar.className = 'absolute bottom-0 left-1 right-1 h-[4px] bg-primary/20 rounded-full';
+        cell.appendChild(bar);
       }
     });
 

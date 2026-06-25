@@ -205,11 +205,11 @@ document.addEventListener('DOMContentLoaded', () => {
           const cvs = document.createElement('canvas');
           cvs.width = 1;
           cvs.height = 1;
-          cvs.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
-          const fallbackW = monthGrid.clientWidth / 7 || 171;
+          cvs.style.cssText = 'position:absolute;left:2px;right:2px;bottom:2px;height:55%;pointer-events:none;border-radius:4px;background:rgba(4,89,197,0.03)';
+          const fallbackW = (monthGrid.clientWidth / 7 || 171) - 4;
           const drawOnCanvas = () => {
-            const w = cell.clientWidth || fallbackW;
-            const h = cell.clientHeight || (Math.max(80, w * 0.7));
+            const w = cell.clientWidth - 4 || fallbackW;
+            const h = Math.min(cell.clientHeight * 0.55 || 50, 80);
             if (w < 10 || h < 10) return;
             cvs.width = w * 2;
             cvs.height = h * 2;

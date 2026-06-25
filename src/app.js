@@ -416,16 +416,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startDrawing(e) {
-      e.preventDefault();
-      if (e.pointerType !== 'pen') return;
-      isDrawing = true;
-      currentStroke = [getPos(e)];
-      canvas.setPointerCapture(e.pointerId);
+      if (e.pointerType === 'pen') {
+        e.preventDefault();
+        isDrawing = true;
+        currentStroke = [getPos(e)];
+        canvas.setPointerCapture(e.pointerId);
+      }
     }
 
     function draw(e) {
-      e.preventDefault();
       if (!isDrawing || e.pointerType !== 'pen') return;
+      e.preventDefault();
       const pos = getPos(e);
       const last = currentStroke[currentStroke.length - 1];
       currentStroke.push({ ...pos });
@@ -462,6 +463,8 @@ document.addEventListener('DOMContentLoaded', () => {
     canvas.addEventListener('pointermove', draw, { passive: false });
     canvas.addEventListener('pointerup', stopDrawing);
     canvas.addEventListener('pointercancel', stopDrawing);
+    container.style.touchAction = 'none';
+    canvas.style.touchAction = 'none';
 
     const ro = new ResizeObserver(() => {
       clearTimeout(resizeTimer);

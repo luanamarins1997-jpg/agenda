@@ -4,8 +4,8 @@
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  grid-auto-rows: minmax(120px, 1fr);
   flex: 1;
+  overflow: hidden;
 }
 .day-cell {
   border-right: 1px solid #E5E5EA;

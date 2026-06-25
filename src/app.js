@@ -188,6 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `</div>`;
     }
     monthGrid.innerHTML = html;
+    monthGrid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
 
     monthGrid.querySelectorAll('.day-cell').forEach(cell => {
       const ds = cell.dataset.date;

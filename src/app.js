@@ -683,6 +683,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Zoom controls
+    dayGrid.style.transition = 'transform 0.15s ease';
+
     function applyZoom(level) {
       zoomLevel = Math.min(3, Math.max(0.5, level));
       dayGrid.style.transform = `scale(${zoomLevel})`;
@@ -694,37 +696,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const zoomOut = document.getElementById('zoom-out');
     if (zoomIn) zoomIn.addEventListener('click', () => applyZoom(zoomLevel + 0.25));
     if (zoomOut) zoomOut.addEventListener('click', () => applyZoom(zoomLevel - 0.25));
-
-    // Pinch-to-zoom on the scroll parent
-    const scrollParent = dayGrid.closest('.overflow-auto');
-    if (scrollParent) {
-      let touches = [];
-      scrollParent.addEventListener('pointerdown', e => {
-        touches = touches.filter(t => t.id !== e.pointerId);
-        touches.push({ id: e.pointerId, x: e.clientX, y: e.clientY });
-      });
-      scrollParent.addEventListener('pointermove', e => {
-        const t = touches.find(t => t.id === e.pointerId);
-        if (!t) return;
-        const prevX = t.x, prevY = t.y;
-        t.x = e.clientX; t.y = e.clientY;
-        if (touches.length !== 2) return;
-        const other = touches.find(t2 => t2.id !== e.pointerId);
-        if (!other) return;
-        const dx = other.x - t.x, dy = other.y - t.y;
-        const dist = Math.hypot(dx, dy);
-        if (!t._pinchDist) { t._pinchDist = dist; return; }
-        const delta = dist / t._pinchDist;
-        if (Math.abs(delta - 1) > 0.02) applyZoom(zoomLevel * delta);
-        t._pinchDist = dist;
-      });
-      scrollParent.addEventListener('pointerup', e => {
-        touches = touches.filter(t => t.id !== e.pointerId);
-      });
-      scrollParent.addEventListener('pointercancel', e => {
-        touches = touches.filter(t => t.id !== e.pointerId);
-      });
-    }
 
     applyZoom(zoomLevel);
   }

@@ -205,29 +205,30 @@ document.addEventListener('DOMContentLoaded', () => {
           const cvs = document.createElement('canvas');
           cvs.width = 1;
           cvs.height = 1;
-          cvs.style.cssText = 'position:absolute;left:2px;right:2px;bottom:2px;height:55%;pointer-events:none;border-radius:4px;background:rgba(4,89,197,0.03)';
-          const fallbackW = (monthGrid.clientWidth / 7 || 171) - 4;
+          cvs.style.cssText = 'position:absolute;left:2px;right:2px;bottom:2px;height:40%;pointer-events:none;border-radius:3px;background:rgba(4,89,197,0.05);border:1px solid rgba(4,89,197,0.08)';
+          const fallbackW = (monthGrid.clientWidth / 7 || 171) - 6;
           const drawOnCanvas = () => {
-            const w = cell.clientWidth - 4 || fallbackW;
-            const h = Math.min(cell.clientHeight * 0.55 || 50, 80);
+            const w = cell.clientWidth - 6 || fallbackW;
+            const h = Math.min(cell.clientHeight * 0.4 || 40, 60);
             if (w < 10 || h < 10) return;
             cvs.width = w * 2;
             cvs.height = h * 2;
             cvs.style.width = w + 'px';
             cvs.style.height = h + 'px';
-            const s = Math.min(w / rangeX, h / rangeY);
+            const s = Math.min(w / rangeX * 0.9, h / rangeY * 0.9);
             const offsetX = (w - rangeX * s) / 2;
             const offsetY = (h - rangeY * s) / 2;
             const c = cvs.getContext('2d');
             c.scale(2, 2);
+            c.lineWidth = Math.min(2.5, Math.max(1, 2 / s));
+            c.strokeStyle = '#1a1b1f';
+            c.lineCap = 'round';
+            c.lineJoin = 'round';
             hData.strokes.forEach(stroke => {
               if (stroke.length < 2) return;
               c.beginPath();
               c.moveTo((stroke[0].x - ox) * s + offsetX, (stroke[0].y - oy) * s + offsetY);
               for (let i = 1; i < stroke.length; i++) c.lineTo((stroke[i].x - ox) * s + offsetX, (stroke[i].y - oy) * s + offsetY);
-              c.strokeStyle = '#1a1b1f';
-              c.lineWidth = Math.max(1, 1.5 / s * 0.3);
-              c.lineCap = 'round';
               c.stroke();
             });
           };

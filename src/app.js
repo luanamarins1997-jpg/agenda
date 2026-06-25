@@ -665,20 +665,25 @@ document.addEventListener('DOMContentLoaded', () => {
       const events = App.getEventsForMonth(year, m);
 
       html += `<div class="year-month-card" data-month="${m}" data-year="${year}">`;
-      html += `<div class="font-headline-sm text-[10px] text-primary mb-0.5">${App.getShortMonthName(m)}</div>`;
-      html += `<div class="grid grid-cols-7 gap-0">`;
+      html += `<div class="font-headline-sm text-[13px] text-primary mb-1.5 font-semibold">${App.getShortMonthName(m)}</div>`;
+      html += `<div class="grid grid-cols-7 gap-0 flex-1">`;
+      ['D','S','T','Q','Q','S','S'].forEach(day => {
+        html += `<span class="text-center text-[8px] text-secondary font-semibold">${day}</span>`;
+      });
       for (let i = 0; i < firstDay; i++) {
-        html += `<span class="text-[6px] leading-none">&nbsp;</span>`;
+        html += `<span class="text-[8px]"></span>`;
       }
       for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const isToday = dateStr === '2026-06-26';
-        html += `<span class="text-center text-[7px] leading-tight ${isToday ? 'bg-primary text-white rounded-full w-3.5 h-3.5 inline-flex items-center justify-center' : ''}">${day}</span>`;
+        html += `<span class="text-center text-[9px] leading-snug ${isToday ? 'bg-primary text-white rounded-full w-4 h-4 inline-flex items-center justify-center mx-auto' : ''}">${day}</span>`;
       }
+      html += `</div>`;
       html += `</div>`;
       html += `</div>`;
     }
     yearGrid.innerHTML = html;
+    yearGrid.style.gridTemplateRows = 'repeat(4, 1fr)';
 
     yearGrid.querySelectorAll('.year-month-card').forEach(card => {
       card.addEventListener('click', () => {

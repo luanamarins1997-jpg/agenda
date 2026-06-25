@@ -78,19 +78,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Menu toggle
   function closeMenu() {
-    if (menuDropdown) menuDropdown.classList.add('hidden');
+    if (menuDropdown) menuDropdown.style.display = 'none';
+  }
+
+  function showMenu() {
+    if (menuDropdown) menuDropdown.style.display = '';
+  }
+
+  function toggleMenu() {
+    if (!menuDropdown) return;
+    if (menuDropdown.style.display === 'none') {
+      menuDropdown.style.display = '';
+    } else {
+      menuDropdown.style.display = 'none';
+    }
   }
 
   if (menuToggle) {
     menuToggle.addEventListener('click', (e) => {
       e.stopPropagation();
-      menuDropdown.classList.toggle('hidden');
+      toggleMenu();
     });
   }
 
   document.addEventListener('click', (e) => {
-    if (menuDropdown && !menuDropdown.classList.contains('hidden') &&
-        !menuDropdown.contains(e.target) && e.target !== menuToggle) {
+    if (!menuDropdown || menuDropdown.style.display === 'none') return;
+    if (!menuDropdown.contains(e.target) && e.target !== menuToggle) {
       closeMenu();
     }
   });

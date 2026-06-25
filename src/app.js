@@ -416,16 +416,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startDrawing(e) {
-      if (e.pointerType !== 'pen') return;
       e.preventDefault();
+      if (e.pointerType !== 'pen') return;
       isDrawing = true;
       currentStroke = [getPos(e)];
       canvas.setPointerCapture(e.pointerId);
     }
 
     function draw(e) {
-      if (!isDrawing || e.pointerType !== 'pen') return;
       e.preventDefault();
+      if (!isDrawing || e.pointerType !== 'pen') return;
       const pos = getPos(e);
       const last = currentStroke[currentStroke.length - 1];
       currentStroke.push({ ...pos });

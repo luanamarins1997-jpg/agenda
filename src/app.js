@@ -261,13 +261,15 @@ document.addEventListener('DOMContentLoaded', () => {
             cvs.style.width = w + 'px';
             cvs.style.height = h + 'px';
             const s = Math.min(w / rangeX, h / rangeY);
+            const offsetX = (w - rangeX * s) / 2;
+            const offsetY = (h - rangeY * s) / 2;
             const c = cvs.getContext('2d');
             c.scale(2, 2);
             hData.strokes.forEach(stroke => {
               if (stroke.length < 2) return;
               c.beginPath();
-              c.moveTo((stroke[0].x - ox) * s, (stroke[0].y - oy) * s);
-              for (let i = 1; i < stroke.length; i++) c.lineTo((stroke[i].x - ox) * s, (stroke[i].y - oy) * s);
+              c.moveTo((stroke[0].x - ox) * s + offsetX, (stroke[0].y - oy) * s + offsetY);
+              for (let i = 1; i < stroke.length; i++) c.lineTo((stroke[i].x - ox) * s + offsetX, (stroke[i].y - oy) * s + offsetY);
               c.strokeStyle = '#1a1b1f';
               c.lineWidth = Math.max(1, 1.5 / s * 0.3);
               c.lineCap = 'round';

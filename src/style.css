@@ -13,6 +13,7 @@
   transition: all 0.2s ease;
   cursor: pointer;
   position: relative;
+  min-height: 0;
 }
 .day-cell:hover {
   background-color: rgba(4, 89, 197, 0.02);

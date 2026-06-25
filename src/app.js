@@ -190,6 +190,41 @@ document.addEventListener('DOMContentLoaded', () => {
     monthGrid.innerHTML = html;
 
     monthGrid.querySelectorAll('.day-cell').forEach(cell => {
+      const ds = cell.dataset.date;
+      if (ds) {
+        const hData = drawingStore[`${ds}-highlight`];
+        if (hData?.strokes?.length > 0) {
+          const allPts = hData.strokes.flat();
+          const minX = Math.min(...allPts.map(p => p.x)), maxX = Math.max(...allPts.map(p => p.x));
+          const minY = Math.min(...allPts.map(p => p.y)), maxY = Math.max(...allPts.map(p => p.y));
+          const ox = minX, oy = minY;
+          const rangeX = maxX - minX || 1, rangeY = maxY - minY || 1;
+
+          const cvs = document.createElement('canvas');
+          cvs.width = 1;
+          cvs.height = 1;
+          cvs.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
+          requestAnimationFrame(() => {
+            const w = cell.clientWidth, h = cell.clientHeight;
+            if (w < 10 || h < 10) return;
+            cvs.width = w;
+            cvs.height = h;
+            const s = Math.min(w / rangeX, h / rangeY);
+            const c = cvs.getContext('2d');
+            hData.strokes.forEach(stroke => {
+              if (stroke.length < 2) return;
+              c.beginPath();
+              c.moveTo((stroke[0].x - ox) * s, (stroke[0].y - oy) * s);
+              for (let i = 1; i < stroke.length; i++) c.lineTo((stroke[i].x - ox) * s, (stroke[i].y - oy) * s);
+              c.strokeStyle = '#1a1b1f';
+              c.lineWidth = Math.max(1, 1.5 / s * 0.3);
+              c.lineCap = 'round';
+              c.stroke();
+            });
+          });
+          cell.appendChild(cvs);
+        }
+      }
       cell.addEventListener('click', () => {
         const dateStr = cell.dataset.date;
         if (dateStr) {

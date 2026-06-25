@@ -498,58 +498,114 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // Two-finger pinch zoom for the day grid. Native momentum scroll is kept for
-  // one-finger drags (and pan when zoomed in); the Apple Pencil keeps drawing via
-  // pointer events. We drive a CSS `zoom` on the grid instead of letting the browser
-  // zoom the visual viewport, which is what used to lock scrolling on iPad.
-  function setupDayZoom(scrollEl, contentEl) {
+  // Pan + pinch-zoom totalmente controlado em JS para a grade do dia.
+  // Usamos transform: translate()+scale() (coordenadas confiaveis no Safari/iPad,
+  // ao contrario de CSS `zoom`). Nada de rolagem nativa: 1 dedo move (vertical, e
+  // horizontal so quando ha zoom), 2 dedos dao zoom, e a caneta desenha com a tela
+  // parada porque toques de stylus sao ignorados e a rolagem nativa esta desligada.
+  function setupDayZoom(viewportEl, layerEl) {
     const MIN = 1, MAX = 4;
-    let zoom = 1;
-    let pinching = false;
-    let startDist = 0, startZoom = 1;
-    let anchorX = 0, anchorY = 0; // content point (unzoomed px) under the pinch center
+    let z = 1, tx = 0, ty = 0;
+    let mode = null;          // 'pan' | 'pinch'
+    let lastX = 0, lastY = 0; // ultimo ponto do dedo (pan)
+    let startDist = 0, startZ = 1, anchorX = 0, anchorY = 0;
+    let vy = 0, lastT = 0, inertiaRAF = 0;
 
     const fingers = (e) => Array.from(e.touches).filter(t => t.touchType !== 'stylus');
     const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
 
-    scrollEl.addEventListener('touchstart', (e) => {
+    function clamp() {
+      const CW = viewportEl.clientWidth, CH = viewportEl.clientHeight;
+      const W = layerEl.offsetWidth * z, H = layerEl.offsetHeight * z;
+      // horizontal: centraliza se couber, senao prende nas bordas
+      if (W <= CW) tx = (CW - W) / 2;
+      else tx = Math.max(CW - W, Math.min(0, tx));
+      // vertical: topo se couber, senao rola entre o topo e o fim
+      if (H <= CH) ty = 0;
+      else ty = Math.max(CH - H, Math.min(0, ty));
+    }
+
+    function apply() {
+      clamp();
+      layerEl.style.transform = `translate(${tx}px, ${ty}px) scale(${z})`;
+    }
+
+    function stopInertia() { if (inertiaRAF) { cancelAnimationFrame(inertiaRAF); inertiaRAF = 0; } }
+
+    function inertia() {
+      vy *= 0.95;
+      if (Math.abs(vy) < 0.05) { inertiaRAF = 0; return; }
+      const before = ty;
+      ty += vy;
+      apply();
+      if (ty === before) { inertiaRAF = 0; return; } // bateu na borda
+      inertiaRAF = requestAnimationFrame(inertia);
+    }
+
+    viewportEl.addEventListener('touchstart', (e) => {
+      stopInertia();
       if (penDrawing) return;
       const f = fingers(e);
-      if (f.length !== 2) return;
-      pinching = true;
-      startDist = dist(f[0], f[1]) || 1;
-      startZoom = zoom;
-      const rect = scrollEl.getBoundingClientRect();
-      const mx = (f[0].clientX + f[1].clientX) / 2 - rect.left;
-      const my = (f[0].clientY + f[1].clientY) / 2 - rect.top;
-      anchorX = (scrollEl.scrollLeft + mx) / zoom;
-      anchorY = (scrollEl.scrollTop + my) / zoom;
+      if (f.length === 1) {
+        mode = 'pan';
+        lastX = f[0].clientX; lastY = f[0].clientY;
+        vy = 0; lastT = e.timeStamp;
+      } else if (f.length >= 2) {
+        mode = 'pinch';
+        startDist = dist(f[0], f[1]) || 1;
+        startZ = z;
+        const rect = viewportEl.getBoundingClientRect();
+        const mx = (f[0].clientX + f[1].clientX) / 2 - rect.left;
+        const my = (f[0].clientY + f[1].clientY) / 2 - rect.top;
+        anchorX = (mx - tx) / z; // ponto do conteudo sob o centro da pinca
+        anchorY = (my - ty) / z;
+      }
     }, { passive: false });
 
-    scrollEl.addEventListener('touchmove', (e) => {
-      // Enquanto a caneta desenha, trava qualquer rolagem (a stylus tambem
-      // gera toques que rolavam a tela de lado durante a escrita com zoom).
-      if (penDrawing) { e.preventDefault(); return; }
-      if (!pinching) return;
+    viewportEl.addEventListener('touchmove', (e) => {
+      if (penDrawing) { e.preventDefault(); return; } // tela parada para escrever
       const f = fingers(e);
-      if (f.length < 2) { pinching = false; return; }
-      e.preventDefault();
-      let z = startZoom * (dist(f[0], f[1]) / startDist);
-      z = Math.max(MIN, Math.min(MAX, z));
-      zoom = z;
-      contentEl.style.zoom = z === 1 ? '' : z;
-      const rect = scrollEl.getBoundingClientRect();
-      const mx = (f[0].clientX + f[1].clientX) / 2 - rect.left;
-      const my = (f[0].clientY + f[1].clientY) / 2 - rect.top;
-      scrollEl.scrollLeft = anchorX * z - mx;
-      scrollEl.scrollTop = anchorY * z - my;
+      if (mode === 'pan' && f.length >= 1) {
+        e.preventDefault();
+        const dx = f[0].clientX - lastX, dy = f[0].clientY - lastY;
+        lastX = f[0].clientX; lastY = f[0].clientY;
+        tx += dx; ty += dy;
+        const dt = e.timeStamp - lastT; lastT = e.timeStamp;
+        if (dt > 0) vy = dy / dt * 16; // px por frame (~16ms)
+        apply();
+      } else if (mode === 'pinch' && f.length >= 2) {
+        e.preventDefault();
+        let nz = startZ * (dist(f[0], f[1]) / startDist);
+        nz = Math.max(MIN, Math.min(MAX, nz));
+        z = nz;
+        const rect = viewportEl.getBoundingClientRect();
+        const mx = (f[0].clientX + f[1].clientX) / 2 - rect.left;
+        const my = (f[0].clientY + f[1].clientY) / 2 - rect.top;
+        tx = mx - anchorX * z; // mantem o ponto ancorado sob a pinca
+        ty = my - anchorY * z;
+        apply();
+      }
     }, { passive: false });
 
-    const end = (e) => { if (fingers(e).length < 2) pinching = false; };
-    scrollEl.addEventListener('touchend', end);
-    scrollEl.addEventListener('touchcancel', end);
+    const end = (e) => {
+      const f = fingers(e);
+      if (f.length === 0) {
+        if (mode === 'pan' && Math.abs(vy) > 0.5) { inertiaRAF = requestAnimationFrame(inertia); }
+        mode = null;
+      } else if (f.length === 1) {
+        // saiu da pinca para um dedo: continua em pan
+        mode = 'pan';
+        lastX = f[0].clientX; lastY = f[0].clientY; vy = 0; lastT = e.timeStamp;
+      }
+    };
+    viewportEl.addEventListener('touchend', end);
+    viewportEl.addEventListener('touchcancel', end);
 
-    return { reset() { zoom = 1; contentEl.style.zoom = ''; } };
+    return {
+      reset() { stopInertia(); z = 1; tx = 0; ty = 0; apply(); },
+      // posiciona o topo visivel em "py" (px do conteudo, escala 1)
+      scrollToY(py) { stopInertia(); ty = -py * z; apply(); }
+    };
   }
 
   // --- Daily View ---
@@ -558,12 +614,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const dateStr = App.formatDate(d);
     const dayEvents = App.getEventsForDate(dateStr);
 
-    let html = `<div class="day-toolbar">
+    let html = `<div class="day-toolbar shrink-0">
       <button id="clear-day-btn" class="text-secondary hover:text-error transition-colors" title="Limpar escritas">
         <span class="material-symbols-outlined text-[18px] align-middle">ink_eraser</span>
       </button>
       <span class="text-[11px] text-on-surface-variant/40 font-body-sm ml-auto">Escreva com a caneta</span>
-    </div>`;
+    </div>
+    <div id="day-zoom-viewport" class="flex-1 relative overflow-hidden" style="touch-action:none">
+    <div id="day-zoom-layer" class="absolute top-0 left-0 w-full" style="transform-origin:0 0">`;
 
     for (let h = 0; h < 24; h++) {
       const timeStr = App.formatTime(h, 0);
@@ -592,6 +650,8 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `<div class="absolute bottom-0 left-0 right-0 h-px bg-outline-variant/15"></div>`;
       html += `</div>`;
     }
+
+    html += `</div></div>`; // fecha #day-zoom-layer e #day-zoom-viewport
 
     dayGrid.innerHTML = html;
 
@@ -625,12 +685,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Pinch-zoom (fingers) on the day grid; reset to 1x on each render
-    const dayScroll = dayGrid.closest('.overflow-auto');
-    if (dayScroll) {
-      if (!dayZoom) dayZoom = setupDayZoom(dayScroll, dayGrid);
+    // Pan + pinch-zoom (dedos) na grade do dia. A grade e recriada a cada render,
+    // entao recriamos o controlador e o ligamos ao viewport/layer novos.
+    const dayViewport = document.getElementById('day-zoom-viewport');
+    const dayLayer = document.getElementById('day-zoom-layer');
+    if (dayViewport && dayLayer) {
+      dayZoom = setupDayZoom(dayViewport, dayLayer);
       dayZoom.reset();
     }
+    const goToY = (py) => { if (dayZoom) dayZoom.scrollToY(Math.max(0, py)); };
 
     // Current time indicator + scroll to current time
     if (dateStr === '2026-06-25') {
@@ -643,11 +706,9 @@ document.addEventListener('DOMContentLoaded', () => {
         indicator.className = 'current-time-indicator';
         indicator.style.top = `${(min / 60) * 80}px`;
         slot.querySelector('.flex-1').appendChild(indicator);
-        const parent = dayGrid.closest('.overflow-auto');
-        if (parent) {
+        if (dayViewport) {
           const slotTop = slot.offsetTop + (min / 60) * 80;
-          const scrollTo = slotTop - parent.clientHeight / 3;
-          parent.scrollTo({ top: Math.max(0, scrollTo), behavior: 'smooth' });
+          goToY(slotTop - dayViewport.clientHeight / 3);
         }
       }
     } else {
@@ -658,12 +719,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data?.written?.some(Boolean)) { targetHour = h; break; }
       }
       const slot = dayGrid.querySelector(`.draw-canvas[data-hour="${targetHour}"]`)?.closest('.time-slot');
-      if (slot) {
-        const parent = dayGrid.closest('.overflow-auto');
-        if (parent) {
-          const scrollTo = slot.offsetTop - parent.clientHeight / 3;
-          parent.scrollTo({ top: Math.max(0, scrollTo), behavior: 'smooth' });
-        }
+      if (slot && dayViewport) {
+        goToY(slot.offsetTop - dayViewport.clientHeight / 3);
       }
     }
 

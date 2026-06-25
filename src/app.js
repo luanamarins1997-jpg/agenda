@@ -39,10 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let editingNoteId = null;
   let highlightCanvasInited = false;
   let highlightInstance = null;
-  let zoomInited = false;
-  let zoomPointers = [];
-  let zoomInitialPinch = 0;
-  let zoomCurrentLevel = 1;
 
 
   // --- Navigation ---
@@ -467,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
     canvas.addEventListener('pointermove', draw, { passive: false });
     canvas.addEventListener('pointerup', stopDrawing);
     canvas.addEventListener('pointercancel', stopDrawing);
-    canvas.style.touchAction = 'none';
+
 
     const ro = new ResizeObserver(() => {
       clearTimeout(resizeTimer);
@@ -940,34 +936,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Register service worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/service-worker.js');
-  }
-
-  // Init pinch zoom on dayGrid (once)
-  if (dayGrid && !zoomInited) {
-    dayGrid.style.transition = 'transform 0.1s ease';
-    dayGrid.addEventListener('pointerdown', e => {
-      zoomPointers = zoomPointers.filter(p => p.id !== e.pointerId);
-      zoomPointers.push({ id: e.pointerId, x: e.clientX, y: e.clientY });
-      if (zoomPointers.length === 2) {
-        zoomInitialPinch = Math.hypot(zoomPointers[0].x - zoomPointers[1].x, zoomPointers[0].y - zoomPointers[1].y);
-      }
-    });
-    dayGrid.addEventListener('pointermove', e => {
-      const p = zoomPointers.find(p => p.id === e.pointerId);
-      if (!p) return;
-      p.x = e.clientX; p.y = e.clientY;
-      if (zoomPointers.length !== 2 || zoomInitialPinch === 0) return;
-      const dist = Math.hypot(zoomPointers[0].x - zoomPointers[1].x, zoomPointers[0].y - zoomPointers[1].y);
-      const delta = dist / zoomInitialPinch;
-      if (Math.abs(delta - 1) > 0.03) {
-        zoomCurrentLevel = Math.min(3, Math.max(0.5, zoomCurrentLevel * delta));
-        dayGrid.style.transform = `scale(${zoomCurrentLevel})`;
-        zoomInitialPinch = dist;
-      }
-    });
-    dayGrid.addEventListener('pointerup', e => { zoomPointers = zoomPointers.filter(p => p.id !== e.pointerId); if (zoomPointers.length < 2) zoomInitialPinch = 0; });
-    dayGrid.addEventListener('pointercancel', e => { zoomPointers = zoomPointers.filter(p => p.id !== e.pointerId); if (zoomPointers.length < 2) zoomInitialPinch = 0; });
-    zoomInited = true;
   }
 
   switchView('month');

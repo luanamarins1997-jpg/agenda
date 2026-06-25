@@ -174,7 +174,7 @@
 
 .draw-canvas {
   display: block;
-  touch-action: pinch-zoom;
+  touch-action: auto;
   cursor: crosshair;
   position: absolute;
   top: 0;

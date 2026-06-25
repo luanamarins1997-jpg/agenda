@@ -204,13 +204,18 @@ document.addEventListener('DOMContentLoaded', () => {
           cvs.width = 1;
           cvs.height = 1;
           cvs.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
-          requestAnimationFrame(() => {
-            const w = cell.clientWidth, h = cell.clientHeight;
+          const fallbackW = monthGrid.clientWidth / 7 || 171;
+          const drawOnCanvas = () => {
+            const w = cell.clientWidth || fallbackW;
+            const h = cell.clientHeight || (Math.max(80, w * 0.7));
             if (w < 10 || h < 10) return;
-            cvs.width = w;
-            cvs.height = h;
+            cvs.width = w * 2;
+            cvs.height = h * 2;
+            cvs.style.width = w + 'px';
+            cvs.style.height = h + 'px';
             const s = Math.min(w / rangeX, h / rangeY);
             const c = cvs.getContext('2d');
+            c.scale(2, 2);
             hData.strokes.forEach(stroke => {
               if (stroke.length < 2) return;
               c.beginPath();
@@ -221,7 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
               c.lineCap = 'round';
               c.stroke();
             });
-          });
+          };
+          requestAnimationFrame(drawOnCanvas);
           cell.appendChild(cvs);
         }
       }

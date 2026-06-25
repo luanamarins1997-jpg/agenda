@@ -37,6 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const menuToggle = $('menu-toggle');
   const menuDropdown = $('menu-dropdown');
   const menuTodayBtn = $('menu-today-btn');
+  const quickDay = $('quick-day');
+  const quickMonth = $('quick-month');
   const navBtns = document.querySelectorAll('.nav-btn');
 
   let editingNoteId = null;
@@ -67,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (viewName === 'notes') renderNotes();
     updateDaySidebar();
     updateNextEvent();
+    updateQuickBtns(viewName);
   }
 
   navBtns.forEach(btn => {
@@ -115,6 +118,23 @@ document.addEventListener('DOMContentLoaded', () => {
       closeMenu();
     });
   }
+
+  // Quick view toggle
+  function updateQuickBtns(view) {
+    if (quickDay) {
+      quickDay.classList.toggle('opacity-40', view !== 'day');
+      quickDay.classList.toggle('text-primary', view === 'day');
+      quickDay.classList.toggle('bg-primary/10', view === 'day');
+    }
+    if (quickMonth) {
+      quickMonth.classList.toggle('opacity-40', view !== 'month');
+      quickMonth.classList.toggle('text-primary', view === 'month');
+      quickMonth.classList.toggle('bg-primary/10', view === 'month');
+    }
+  }
+
+  if (quickDay) quickDay.addEventListener('click', () => { if (App.getState().currentView !== 'day') switchView('day'); });
+  if (quickMonth) quickMonth.addEventListener('click', () => { if (App.getState().currentView !== 'month') switchView('month'); });
 
   // --- Top Bar ---
   function updateTopBar() {

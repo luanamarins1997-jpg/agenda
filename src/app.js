@@ -467,7 +467,6 @@ document.addEventListener('DOMContentLoaded', () => {
     canvas.addEventListener('pointermove', draw, { passive: false });
     canvas.addEventListener('pointerup', stopDrawing);
     canvas.addEventListener('pointercancel', stopDrawing);
-    container.style.touchAction = 'none';
     canvas.style.touchAction = 'none';
 
     const ro = new ResizeObserver(() => {

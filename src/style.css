@@ -1,0 +1,218 @@
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: minmax(120px, 1fr);
+}
+.day-cell {
+  border-right: 1px solid #E5E5EA;
+  border-bottom: 1px solid #E5E5EA;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+.day-cell:hover {
+  background-color: rgba(4, 89, 197, 0.02);
+}
+.day-cell.other-month {
+  background-color: #faf9fe;
+  opacity: 0.4;
+}
+.day-cell.today {
+  background-color: rgba(4, 89, 197, 0.04);
+}
+.active-day-shadow {
+  box-shadow: 0px 4px 20px rgba(0,0,0,0.05);
+}
+.handwritten-font {
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+  opacity: 0.8;
+}
+.view {
+  display: none;
+  flex: 1;
+  overflow: auto;
+}
+.view.active {
+  display: flex;
+  flex-direction: column;
+}
+.planner-canvas {
+  background-image:
+    linear-gradient(to right, #f4f3f8 1px, transparent 1px),
+    linear-gradient(to bottom, #f4f3f8 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.1);
+  border-radius: 10px;
+}
+.paper-texture {
+  background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png');
+}
+.handwritten-entry {
+  font-family: 'Architects Daughter', cursive;
+  letter-spacing: 0.02em;
+  transform: rotate(-0.5deg);
+}
+.time-slot {
+  min-height: 80px;
+  border-bottom: 1px solid #e5e5ea;
+}
+.time-slot:hover {
+  background-color: rgba(4, 89, 197, 0.02);
+}
+.event-block {
+  border-left: 3px solid #0459c5;
+  background-color: rgba(4, 89, 197, 0.06);
+  border-radius: 0 6px 6px 0;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.event-block:hover {
+  background-color: rgba(4, 89, 197, 0.1);
+}
+.event-block.completed {
+  opacity: 0.5;
+}
+.current-time-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px solid #0459c5;
+  z-index: 20;
+  pointer-events: none;
+}
+.current-time-indicator::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  background: #0459c5;
+  border-radius: 50%;
+}
+.week-column {
+  min-width: 0;
+  border-right: 1px solid #e5e5ea;
+}
+.week-column:last-child {
+  border-right: none;
+}
+.year-month-card {
+  aspect-ratio: 1;
+  border: 1px solid #e5e5ea;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.year-month-card:hover {
+  background-color: rgba(4, 89, 197, 0.02);
+  box-shadow: 0px 4px 20px rgba(0,0,0,0.05);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-fade-in {
+  animation: fade-in 0.2s ease;
+}
+.nav-btn.active {
+  background-color: #5891ff;
+  color: #002a65;
+}
+.nav-btn.active .material-symbols-outlined {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.note-card {
+  border: 1px solid #e5e5ea;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.note-card:hover {
+  background-color: rgba(4, 89, 197, 0.02);
+  box-shadow: 0px 4px 20px rgba(0,0,0,0.05);
+}
+#notes-editor textarea {
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.draw-canvas {
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.draw-canvas-bg {
+  background-image:
+    linear-gradient(to right, #f4f3f8 0.5px, transparent 0.5px),
+    linear-gradient(to bottom, #f4f3f8 0.5px, transparent 0.5px);
+  background-size: 24px 24px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.draw-circles {
+  transition: opacity 0.2s ease;
+}
+.draw-circles.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.day-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(250, 249, 254, 0.9);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #c2c6d5;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.day-toolbar button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+.day-toolbar button:hover {
+  background-color: rgba(4, 89, 197, 0.08);
+}

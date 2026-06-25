@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Pro Agenda">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#faf9fe">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/icon-180.png">
+  <link rel="manifest" href="manifest.json">
+
+  <title>Pro Agenda</title>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Hanken+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="src/style.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            surface: '#faf9fe',
+            'surface-dim': '#dad9df',
+            'surface-bright': '#faf9fe',
+            'surface-container-lowest': '#ffffff',
+            'surface-container-low': '#f4f3f8',
+            'surface-container': '#eeedf3',
+            'surface-container-high': '#e9e7ed',
+            'surface-container-highest': '#e3e2e7',
+            'on-surface': '#1a1b1f',
+            'on-surface-variant': '#424753',
+            'inverse-surface': '#2f3034',
+            'inverse-on-surface': '#f1f0f5',
+            outline: '#737784',
+            'outline-variant': '#c2c6d5',
+            'surface-tint': '#0459c5',
+            primary: '#0459c5',
+            'on-primary': '#ffffff',
+            'primary-container': '#5891ff',
+            'on-primary-container': '#002a65',
+            'inverse-primary': '#afc6ff',
+            secondary: '#5f5e5e',
+            'on-secondary': '#ffffff',
+            'secondary-container': '#e2dfde',
+            'on-secondary-container': '#636262',
+            tertiary: '#5d5e63',
+            'on-tertiary': '#ffffff',
+            'tertiary-container': '#939499',
+            'on-tertiary-container': '#2b2d31',
+            error: '#ba1a1a',
+            'on-error': '#ffffff',
+            'error-container': '#ffdad6',
+            'on-error-container': '#93000a',
+            'primary-fixed': '#d9e2ff',
+            'primary-fixed-dim': '#afc6ff',
+            'on-primary-fixed': '#001a43',
+            'on-primary-fixed-variant': '#004398',
+            'secondary-fixed': '#e5e2e1',
+            'secondary-fixed-dim': '#c8c6c5',
+            'on-secondary-fixed': '#1c1b1b',
+            'on-secondary-fixed-variant': '#474746',
+            'tertiary-fixed': '#e2e2e7',
+            'tertiary-fixed-dim': '#c6c6cb',
+            'on-tertiary-fixed': '#1a1c1f',
+            'on-tertiary-fixed-variant': '#45474b',
+            background: '#faf9fe',
+            'on-background': '#1a1b1f',
+            'surface-variant': '#e3e2e7'
+          },
+          borderRadius: {
+            DEFAULT: '0.125rem',
+            lg: '0.25rem',
+            xl: '0.5rem',
+            '2xl': '0.75rem',
+            full: '9999px'
+          },
+          spacing: {
+            unit: '8px',
+            gutter: '16px',
+            'margin-tablet': '32px',
+            'time-column-width': '80px',
+            'sidebar-width': '320px'
+          },
+          fontFamily: {
+            'headline-sm': ['Hanken Grotesk'],
+            'headline-lg': ['Hanken Grotesk'],
+            'display-xl': ['Hanken Grotesk'],
+            'body-md': ['Inter'],
+            'body-sm': ['Inter'],
+            'label-mono': ['JetBrains Mono']
+          },
+          fontSize: {
+            'headline-sm': ['18px', { lineHeight: '24px', fontWeight: '600' }],
+            'headline-lg': ['32px', { lineHeight: '40px', letterSpacing: '-0.02em', fontWeight: '600' }],
+            'display-xl': ['96px', { lineHeight: '100px', letterSpacing: '-0.04em', fontWeight: '700' }],
+            'body-sm': ['14px', { lineHeight: '20px', fontWeight: '400' }],
+            'body-md': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+            'label-mono': ['12px', { lineHeight: '16px', letterSpacing: '0.05em', fontWeight: '500' }]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  </style>
+</head>
+<body class="bg-surface text-on-surface h-screen overflow-hidden flex safe-top">
+  <!-- Sidebar -->
+  <aside class="w-sidebar-width h-full flex flex-col border-r border-outline-variant bg-surface-container-low shrink-0 overflow-hidden">
+    <div class="p-gutter flex items-center gap-3 border-b border-outline-variant">
+      <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+        <span class="material-symbols-outlined text-white text-[18px]" style="font-variation-settings:'FILL' 1">calendar_month</span>
+      </div>
+      <h1 class="font-headline-sm text-primary text-[16px]">Pro Agenda</h1>
+    </div>
+
+    <nav class="p-3 space-y-1 flex flex-col">
+      <button class="nav-btn flex items-center gap-3 w-full px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-xl text-[13px] group" data-view="day">
+        <span class="material-symbols-outlined text-[20px]">calendar_view_day</span>
+        <span class="font-body-md text-[13px]">DIA</span>
+      </button>
+      <button class="nav-btn flex items-center gap-3 w-full px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-xl text-[13px] group" data-view="week">
+        <span class="material-symbols-outlined text-[20px]">calendar_view_week</span>
+        <span class="font-body-md text-[13px]">SEMANA</span>
+      </button>
+      <button class="nav-btn active flex items-center gap-3 w-full px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-xl text-[13px] group" data-view="month">
+        <span class="material-symbols-outlined text-[20px]">calendar_view_month</span>
+        <span class="font-body-md text-[13px] font-semibold">MÊS</span>
+      </button>
+      <button class="nav-btn flex items-center gap-3 w-full px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-xl text-[13px] group" data-view="year">
+        <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+        <span class="font-body-md text-[13px]">ANO</span>
+      </button>
+      <button class="nav-btn flex items-center gap-3 w-full px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-xl text-[13px] group" data-view="notes">
+        <span class="material-symbols-outlined text-[20px]">sticky_note_2</span>
+        <span class="font-body-md text-[13px]">NOTAS</span>
+      </button>
+    </nav>
+
+    <div class="px-4 py-3 border-t border-outline-variant">
+      <div id="sidebar-minical" class="bg-surface-container-lowest/50 rounded-xl p-3 border border-outline-variant/30"></div>
+    </div>
+
+    <div id="sidebar-highlight" class="px-4 pb-2 hidden">
+      <div class="bg-primary/10 rounded-xl border-l-4 border-primary relative overflow-hidden shadow-sm" style="aspect-ratio:172.67/120;max-width:100%">
+        <div class="absolute top-2 left-3 font-label-mono text-[9px] text-primary/60 uppercase tracking-widest z-10">Destaque</div>
+        <canvas id="highlight-canvas" class="absolute inset-0 w-full h-full" style="touch-action:none;cursor:crosshair"></canvas>
+        <div class="absolute bottom-2 right-3 z-10">
+          <span class="material-symbols-outlined text-primary text-lg opacity-80" style="font-variation-settings:'FILL' 1">star</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-auto px-4 py-4 border-t border-outline-variant">
+      <div id="sidebar-next-event" class="bg-surface p-3 rounded-xl border border-outline-variant">
+        <h3 class="font-label-mono text-[10px] text-secondary mb-1 tracking-widest uppercase">Próximo evento</h3>
+        <p class="font-body-sm font-semibold text-on-surface">—</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col overflow-hidden bg-background">
+    <!-- Top Bar -->
+    <header class="flex items-center justify-between px-margin-tablet py-3 bg-surface border-b border-outline-variant shrink-0">
+      <div class="flex items-center gap-4">
+        <button id="nav-prev" class="p-1.5 hover:bg-surface-container-low rounded-lg transition-colors">
+          <span class="material-symbols-outlined text-[20px] text-on-surface-variant">chevron_left</span>
+        </button>
+        <div>
+          <h2 id="topbar-title" class="font-headline-sm text-[16px] text-on-surface">Junho 2026</h2>
+          <p id="topbar-subtitle" class="font-body-sm text-[12px] text-on-surface-variant/60 hidden"></p>
+        </div>
+        <button id="nav-next" class="p-1.5 hover:bg-surface-container-low rounded-lg transition-colors">
+          <span class="material-symbols-outlined text-[20px] text-on-surface-variant">chevron_right</span>
+        </button>
+      </div>
+      <div class="flex items-center gap-4">
+        <button id="nav-today" class="px-5 py-1.5 bg-primary text-on-primary rounded-lg text-[13px] font-semibold hover:opacity-90 transition-opacity active:opacity-70">
+          Hoje
+        </button>
+      </div>
+    </header>
+
+    <!-- View: MÊS -->
+    <div id="view-month" class="view active">
+      <div class="flex-1 overflow-auto p-gutter">
+        <div class="max-w-[1200px] mx-auto bg-surface rounded-xl overflow-hidden shadow-sm border border-outline-variant">
+          <div class="grid grid-cols-7 bg-surface-container-low border-b border-outline-variant">
+            <div class="py-2.5 text-center font-label-mono text-[10px] text-error">DOM</div>
+            <div class="py-2.5 text-center font-label-mono text-[10px] text-secondary">SEG</div>
+            <div class="py-2.5 text-center font-label-mono text-[10px] text-secondary">TER</div>
+            <div class="py-2.5 text-center font-label-mono text-[10px] text-secondary">QUA</div>
+            <div class="py-2.5 text-center font-label-mono text-[10px] text-secondary">QUI</div>
+            <div class="py-2.5 text-center font-label-mono text-[10px] text-secondary">SEX</div>
+            <div class="py-2.5 text-center font-label-mono text-[10px] text-secondary">SÁB</div>
+          </div>
+          <div id="month-grid" class="calendar-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View: SEMANA -->
+    <div id="view-week" class="view">
+      <div class="flex-1 overflow-auto p-gutter">
+        <div id="week-grid" class="flex bg-surface rounded-xl overflow-hidden shadow-sm border border-outline-variant min-h-full"></div>
+      </div>
+    </div>
+
+    <!-- View: DIA -->
+    <div id="view-day" class="view">
+      <div class="flex-1 overflow-auto relative">
+        <div id="day-grid" class="bg-white relative"></div>
+      </div>
+    </div>
+
+    <!-- View: ANO -->
+    <div id="view-year" class="view">
+      <div class="flex-1 overflow-auto p-gutter">
+        <div id="year-grid" class="grid grid-cols-3 gap-4 max-w-[900px] mx-auto"></div>
+      </div>
+    </div>
+
+    <!-- View: NOTAS -->
+    <div id="view-notes" class="view">
+      <div class="flex-1 overflow-auto p-gutter">
+        <div class="max-w-[800px] mx-auto">
+          <div id="notes-list" class="grid grid-cols-2 gap-4"></div>
+          <div id="notes-editor" class="hidden">
+            <div class="flex items-center gap-3 mb-4">
+              <button id="notes-back-btn" class="hidden p-2 hover:bg-surface-container-low rounded-lg">
+                <span class="material-symbols-outlined">arrow_back</span>
+              </button>
+              <button id="notes-delete-btn" class="hidden p-2 hover:bg-error-container rounded-lg text-error">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            </div>
+            <input id="notes-editor-title" type="text" placeholder="Título" class="font-headline-lg text-[28px] text-on-surface bg-transparent border-none outline-none w-full mb-4 placeholder:text-outline-variant">
+            <textarea id="notes-editor-area" placeholder="Escreva sua nota aqui..." rows="20" class="font-body-md text-on-surface bg-surface-container-low rounded-xl p-6 placeholder:text-outline-variant"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Floating Action Button -->
+  <button id="fab" class="fixed bottom-margin-tablet right-margin-tablet w-14 h-14 bg-primary text-on-primary rounded-xl shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-30 cursor-pointer">
+    <span class="material-symbols-outlined text-[24px]">add</span>
+  </button>
+
+  <!-- Detail Overlay -->
+  <div id="detail-overlay" class="hidden fixed inset-0 bg-surface/80 backdrop-blur-sm z-40 items-center justify-center p-8">
+    <div id="detail-content" class="w-full max-w-lg"></div>
+  </div>
+
+  <script src="src/data.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>

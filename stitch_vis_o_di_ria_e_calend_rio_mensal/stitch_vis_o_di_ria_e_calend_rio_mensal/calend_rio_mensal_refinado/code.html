@@ -1,0 +1,356 @@
+<!DOCTYPE html><html class="light" lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700&amp;family=JetBrains+Mono:wght@500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&amp;family=Inter:wght@100..900&amp;family=JetBrains+Mono:wght@100..900&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-auto-rows: minmax(120px, 1fr);
+        }
+        .day-cell {
+            border-right: 1px solid #E5E5EA;
+            border-bottom: 1px solid #E5E5EA;
+            transition: all 0.2s ease;
+        }
+        .day-cell:hover {
+            background-color: rgba(4, 89, 197, 0.02);
+        }
+        .active-day-shadow {
+            box-shadow: 0px 4px 20px rgba(0,0,0,0.05);
+        }
+        .handwritten-font {
+            font-family: 'Inter', sans-serif; /* Simulating a clean handwriting feel */
+            font-style: italic;
+            opacity: 0.8;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e9e7ed",
+                        "secondary-fixed": "#e5e2e1",
+                        "tertiary-fixed": "#e2e2e7",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#939499",
+                        "inverse-surface": "#2f3034",
+                        "surface-variant": "#e3e2e7",
+                        "background": "#faf9fe",
+                        "on-surface": "#1a1b1f",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "on-surface-variant": "#424753",
+                        "surface-tint": "#0459c5",
+                        "surface-dim": "#dad9df",
+                        "primary-fixed": "#d9e2ff",
+                        "on-secondary-fixed-variant": "#474746",
+                        "on-tertiary-fixed-variant": "#45474b",
+                        "primary-container": "#5891ff",
+                        "surface-container": "#eeedf3",
+                        "outline-variant": "#c2c6d5",
+                        "inverse-on-surface": "#f1f0f5",
+                        "surface-container-low": "#f4f3f8",
+                        "surface-container-highest": "#e3e2e7",
+                        "on-tertiary-container": "#2b2d31",
+                        "surface": "#faf9fe",
+                        "tertiary-fixed-dim": "#c6c6cb",
+                        "surface-bright": "#faf9fe",
+                        "on-primary-container": "#002a65",
+                        "on-secondary-container": "#636262",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "on-primary-fixed": "#001a43",
+                        "inverse-primary": "#afc6ff",
+                        "secondary-container": "#e2dfde",
+                        "error-container": "#ffdad6",
+                        "secondary": "#5f5e5e",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "primary": "#0459c5",
+                        "on-background": "#1a1b1f",
+                        "primary-fixed-dim": "#afc6ff",
+                        "error": "#ba1a1a",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#5d5e63",
+                        "on-tertiary-fixed": "#1a1c1f",
+                        "on-primary-fixed-variant": "#004398",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#737784"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "margin-tablet": "32px",
+                        "gutter": "16px",
+                        "sidebar-width": "320px",
+                        "time-column-width": "80px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Hanken Grotesk"],
+                        "display-xl": ["Hanken Grotesk"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "label-mono": ["JetBrains Mono"],
+                        "headline-lg": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "display-xl": ["96px", {"lineHeight": "100px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "600"}],
+                        "label-mono": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface flex h-screen overflow-hidden">
+<!-- NavigationDrawer (Sidebar) -->
+<aside class="fixed left-0 top-0 h-full w-sidebar-width flex flex-col h-full p-gutter gap-unit bg-surface-container-low border-r border-outline-variant z-20">
+<div class="mb-gutter">
+<h1 class="font-headline-sm text-headline-sm text-primary">Navegação</h1>
+</div>
+<nav class="space-y-1">
+<!-- DIA -->
+<button class="w-full flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-full group">
+<span class="material-symbols-outlined">calendar_view_day</span>
+<span class="font-body-md">DIA</span>
+</button>
+<!-- SEMANA -->
+<button class="w-full flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-full group">
+<span class="material-symbols-outlined">calendar_view_week</span>
+<span class="font-body-md">SEMANA</span>
+</button>
+<!-- MÊS (ACTIVE) -->
+<button class="w-full flex items-center gap-4 px-4 py-3 bg-primary-container text-on-primary-container rounded-full transition-all active-day-shadow">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_view_month</span>
+<span class="font-body-md font-bold">MÊS</span>
+</button>
+<!-- ANO -->
+<button class="w-full flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-full group">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-body-md">ANO</span>
+</button>
+<!-- NOTAS -->
+<button class="w-full flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-full group">
+<span class="material-symbols-outlined">sticky_note_2</span>
+<span class="font-body-md">NOTAS</span>
+</button>
+</nav>
+<div class="mt-auto pt-8">
+<div class="bg-surface p-4 rounded-xl border border-outline-variant">
+<h3 class="font-label-mono text-label-mono text-secondary mb-2">PRÓXIMO EVENTO</h3>
+<p class="font-body-sm font-semibold">Dentista às 14:00</p>
+<p class="font-body-sm text-secondary">Amanhã, 23 de Junho</p>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-sidebar-width flex-1 flex flex-col relative overflow-hidden bg-background">
+<!-- TopAppBar -->
+<header class="flex items-center justify-between px-margin-tablet py-unit w-full bg-surface border-b border-outline-variant z-10 sticky top-0">
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container-low rounded-full transition-colors active:opacity-70">
+<span class="material-symbols-outlined text-primary">edit_audio</span>
+</button>
+<h2 class="font-headline-lg text-headline-lg font-bold text-primary">Minha Agenda</h2>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex bg-surface-container rounded-lg p-1">
+<button class="px-4 py-1 font-body-sm text-secondary hover:text-primary transition-colors">MAI</button>
+<button class="px-4 py-1 font-body-sm bg-surface rounded shadow-sm text-primary font-bold">JUN</button>
+<button class="px-4 py-1 font-body-sm text-secondary hover:text-primary transition-colors">JUL</button>
+</div>
+<button class="px-6 py-2 bg-primary text-on-primary rounded font-body-sm font-semibold hover:opacity-90 transition-opacity active:opacity-70">
+                    Hoje
+                </button>
+</div>
+</header>
+<!-- Calendar Container -->
+<div class="flex-1 overflow-auto p-gutter">
+<div class="max-w-[1200px] mx-auto bg-surface rounded-xl overflow-hidden shadow-sm border border-outline-variant">
+<!-- Day Labels -->
+<div class="grid grid-cols-7 bg-surface-container-low border-b border-outline-variant">
+<div class="py-3 text-center font-label-mono text-label-mono text-error">DOM</div>
+<div class="py-3 text-center font-label-mono text-label-mono text-secondary">SEG</div>
+<div class="py-3 text-center font-label-mono text-label-mono text-secondary">TER</div>
+<div class="py-3 text-center font-label-mono text-label-mono text-secondary">QUA</div>
+<div class="py-3 text-center font-label-mono text-label-mono text-secondary">QUI</div>
+<div class="py-3 text-center font-label-mono text-label-mono text-secondary">SEX</div>
+<div class="py-3 text-center font-label-mono text-label-mono text-secondary">SÁB</div>
+</div>
+<!-- Calendar Grid -->
+<div class="calendar-grid">
+<!-- Week 1 (Starting June 2026 starts on Monday) -->
+<div class="day-cell p-3 bg-surface-container-lowest opacity-40">
+<span class="font-label-mono text-label-mono">31</span>
+</div>
+<div class="day-cell p-3">
+<span class="font-label-mono text-label-mono">1</span>
+</div>
+<div class="day-cell p-3">
+<span class="font-label-mono text-label-mono">2</span>
+</div>
+<div class="day-cell p-3">
+<span class="font-label-mono text-label-mono">3</span>
+</div>
+<div class="day-cell p-3">
+<span class="font-label-mono text-label-mono">4</span>
+</div>
+<div class="day-cell p-3">
+<span class="font-label-mono text-label-mono">5</span>
+</div>
+<div class="day-cell p-3">
+<span class="font-label-mono text-label-mono">6</span>
+</div>
+<!-- Week 2 -->
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono text-error">7</span></div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">8</span></div>
+<div class="day-cell p-3">
+<span class="font-label-mono text-label-mono">9</span>
+
+</div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">10</span></div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">11</span></div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">12</span></div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">13</span></div>
+<!-- Week 3 -->
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono text-error">14</span></div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">15</span></div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">16</span></div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">17</span></div>
+<div class="day-cell p-3">
+<span class="font-label-mono text-label-mono">18</span>
+
+</div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">19</span></div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">20</span></div>
+<!-- Week 4 - FEATURING THE 22nd -->
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono text-error">21</span></div>
+<!-- HIGHLIGHTED DAY 22 -->
+<div class="day-cell p-1 bg-surface-container relative cursor-pointer active-day-shadow group overflow-hidden border-2 border-primary-container" id="day-22">
+<div class="bg-primary text-on-primary font-label-mono text-[10px] px-2 py-0.5 absolute top-0 left-0">22</div>
+<div class="mt-6 p-2 h-full">
+<div class="handwritten-font text-headline-sm text-primary leading-tight transform -rotate-1">
+                                Compromisso importante
+                            </div>
+<div class="mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+</div>
+<div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">23</span></div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">24</span></div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">25</span></div>
+<div class="day-cell p-3">
+<span class="font-label-mono text-label-mono">26</span>
+
+</div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">27</span></div>
+<!-- Week 5 -->
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono text-error">28</span></div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">29</span></div>
+<div class="day-cell p-3"><span class="font-label-mono text-label-mono">30</span></div>
+<!-- Next Month Peek -->
+<div class="day-cell p-3 bg-surface-container-lowest opacity-40"><span class="font-label-mono text-label-mono">1</span></div>
+<div class="day-cell p-3 bg-surface-container-lowest opacity-40"><span class="font-label-mono text-label-mono">2</span></div>
+<div class="day-cell p-3 bg-surface-container-lowest opacity-40"><span class="font-label-mono text-label-mono">3</span></div>
+<div class="day-cell p-3 bg-surface-container-lowest opacity-40"><span class="font-label-mono text-label-mono">4</span></div>
+</div>
+</div>
+</div>
+<!-- Floating Quick Action -->
+<button class="fixed bottom-margin-tablet right-margin-tablet w-14 h-14 bg-primary text-on-primary rounded-xl shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-30">
+<span class="material-symbols-outlined">add</span>
+</button>
+<!-- Overlay for Day Detail (Hidden by default) -->
+<div class="hidden absolute inset-0 bg-surface/80 backdrop-blur-sm z-40 flex items-center justify-center p-8" id="detail-overlay">
+<div class="bg-surface border border-outline-variant shadow-2xl rounded-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-300">
+<div class="p-6 border-b border-outline-variant flex justify-between items-start">
+<div>
+<h3 class="font-headline-lg text-headline-lg">Segunda-feira, 22</h3>
+<p class="font-body-md text-secondary">Junho de 2026</p>
+</div>
+<button class="p-2 hover:bg-surface-container rounded-full" onclick="closeDetail()">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="p-6 space-y-6">
+<div class="flex gap-4">
+<div class="w-1 bg-primary rounded-full"></div>
+<div>
+<p class="font-label-mono text-label-mono text-primary">09:00 - 11:00</p>
+<h4 class="font-headline-sm text-headline-sm">Compromisso Importante</h4>
+<p class="font-body-md text-secondary mt-1">Apresentação do projeto final para a diretoria. Trazer o tablet carregado e os protótipos em alta fidelidade.</p>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-xl">
+<h5 class="font-label-mono text-label-mono text-secondary mb-3">LISTA DE TAREFAS</h5>
+<ul class="space-y-2">
+<li class="flex items-center gap-3">
+<div class="w-5 h-5 rounded-full border border-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="font-body-sm line-through text-secondary">Tarefa 1: Preparar Slides</span>
+</li>
+<li class="flex items-center gap-3">
+<div class="w-5 h-5 rounded-full border border-outline-variant"></div>
+<span class="font-body-sm">Tarefa 2: Revisar dados</span>
+</li>
+<li class="flex items-center gap-3">
+<div class="w-5 h-5 rounded-full border border-outline-variant"></div>
+<span class="font-body-sm">Tarefa 3: Enviar convites</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="p-6 bg-surface-container-lowest flex gap-3">
+<button class="flex-1 py-2 bg-primary text-on-primary rounded font-bold font-body-sm">Editar</button>
+<button class="flex-1 py-2 border border-outline text-on-surface rounded font-bold font-body-sm">Mover</button>
+</div>
+</div>
+</div>
+</main>
+<script>
+        const day22 = document.getElementById('day-22');
+        const overlay = document.getElementById('detail-overlay');
+
+        day22.addEventListener('click', () => {
+            overlay.classList.remove('hidden');
+        });
+
+        function closeDetail() {
+            overlay.classList.add('hidden');
+        }
+
+        // Close on backdrop click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeDetail();
+        });
+
+        // ESC key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDetail();
+        });
+    </script>
+
+
+</body></html>

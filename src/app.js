@@ -222,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     monthGrid.innerHTML = html;
     monthGrid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+    monthGrid.style.maxHeight = `${rows * 110}px`;
 
     monthGrid.querySelectorAll('.day-cell').forEach(cell => {
       const ds = cell.dataset.date;

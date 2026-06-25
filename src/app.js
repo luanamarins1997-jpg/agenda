@@ -190,17 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
     monthGrid.innerHTML = html;
 
     monthGrid.querySelectorAll('.day-cell').forEach(cell => {
-      const ds = cell.dataset.date;
-      if (!ds) return;
-      const hData = drawingStore[`${ds}-highlight`];
-      if (hData?.strokes?.length > 0) {
-        const bar = document.createElement('div');
-        bar.className = 'absolute bottom-0 left-1 right-1 h-[4px] bg-primary/20 rounded-full';
-        cell.appendChild(bar);
-      }
-    });
-
-    monthGrid.querySelectorAll('.day-cell').forEach(cell => {
       cell.addEventListener('click', () => {
         const dateStr = cell.dataset.date;
         if (dateStr) {

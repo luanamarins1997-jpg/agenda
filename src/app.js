@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let editingNoteId = null;
   let highlightCanvasInited = false;
   let highlightInstance = null;
+  let dayZoom = null;
+  let penDrawing = false;
 
 
   // --- Navigation ---
@@ -419,6 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.pointerType === 'pen') {
         e.preventDefault();
         isDrawing = true;
+        penDrawing = true;
         currentStroke = [getPos(e)];
         canvas.setPointerCapture(e.pointerId);
       }
@@ -441,6 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function stopDrawing(e) {
+      penDrawing = false;
       if (!isDrawing) return;
       isDrawing = false;
       if (currentStroke.length > 1) {
@@ -492,6 +496,57 @@ document.addEventListener('DOMContentLoaded', () => {
         redraw();
       }
     };
+  }
+
+  // Two-finger pinch zoom for the day grid. Native momentum scroll is kept for
+  // one-finger drags (and pan when zoomed in); the Apple Pencil keeps drawing via
+  // pointer events. We drive a CSS `zoom` on the grid instead of letting the browser
+  // zoom the visual viewport, which is what used to lock scrolling on iPad.
+  function setupDayZoom(scrollEl, contentEl) {
+    const MIN = 1, MAX = 4;
+    let zoom = 1;
+    let pinching = false;
+    let startDist = 0, startZoom = 1;
+    let anchorX = 0, anchorY = 0; // content point (unzoomed px) under the pinch center
+
+    const fingers = (e) => Array.from(e.touches).filter(t => t.touchType !== 'stylus');
+    const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+
+    scrollEl.addEventListener('touchstart', (e) => {
+      if (penDrawing) return;
+      const f = fingers(e);
+      if (f.length !== 2) return;
+      pinching = true;
+      startDist = dist(f[0], f[1]) || 1;
+      startZoom = zoom;
+      const rect = scrollEl.getBoundingClientRect();
+      const mx = (f[0].clientX + f[1].clientX) / 2 - rect.left;
+      const my = (f[0].clientY + f[1].clientY) / 2 - rect.top;
+      anchorX = (scrollEl.scrollLeft + mx) / zoom;
+      anchorY = (scrollEl.scrollTop + my) / zoom;
+    }, { passive: false });
+
+    scrollEl.addEventListener('touchmove', (e) => {
+      if (!pinching) return;
+      const f = fingers(e);
+      if (f.length < 2) { pinching = false; return; }
+      e.preventDefault();
+      let z = startZoom * (dist(f[0], f[1]) / startDist);
+      z = Math.max(MIN, Math.min(MAX, z));
+      zoom = z;
+      contentEl.style.zoom = z === 1 ? '' : z;
+      const rect = scrollEl.getBoundingClientRect();
+      const mx = (f[0].clientX + f[1].clientX) / 2 - rect.left;
+      const my = (f[0].clientY + f[1].clientY) / 2 - rect.top;
+      scrollEl.scrollLeft = anchorX * z - mx;
+      scrollEl.scrollTop = anchorY * z - my;
+    }, { passive: false });
+
+    const end = (e) => { if (fingers(e).length < 2) pinching = false; };
+    scrollEl.addEventListener('touchend', end);
+    scrollEl.addEventListener('touchcancel', end);
+
+    return { reset() { zoom = 1; contentEl.style.zoom = ''; } };
   }
 
   // --- Daily View ---
@@ -565,6 +620,13 @@ document.addEventListener('DOMContentLoaded', () => {
           canvasInstances.forEach(inst => inst.clear());
         }
       });
+    }
+
+    // Pinch-zoom (fingers) on the day grid; reset to 1x on each render
+    const dayScroll = dayGrid.closest('.overflow-auto');
+    if (dayScroll) {
+      if (!dayZoom) dayZoom = setupDayZoom(dayScroll, dayGrid);
+      dayZoom.reset();
     }
 
     // Current time indicator + scroll to current time

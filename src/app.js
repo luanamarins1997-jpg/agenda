@@ -383,14 +383,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getPos(e) {
       const rect = canvas.getBoundingClientRect();
-      return { x: e.clientX - rect.left, y: e.clientY - rect.top, pressure: e.pressure || 0.5 };
+      const z = zoomLevel || 1;
+      return { x: (e.clientX - rect.left) / z, y: (e.clientY - rect.top) / z, pressure: e.pressure || 0.5 };
     }
 
     function redraw() {
-      const rect = container.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      const h = rect.height;
-      const w = rect.width;
+      const w = container.clientWidth;
+      const h = container.clientHeight;
       canvas.width = w * dpr;
       canvas.height = h * dpr;
       ctx.scale(dpr, dpr);

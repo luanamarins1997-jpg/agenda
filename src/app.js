@@ -334,34 +334,76 @@ document.addEventListener('DOMContentLoaded', () => {
       const dateStr = App.formatDate(date);
       const dayEvents = events.filter(e => e.date === dateStr);
       const isToday = dateStr === '2026-06-22';
-      const isWeekend = i === 0 || i === 6;
 
-      html += `<div class="week-column flex flex-col ${isToday ? 'bg-primary/5' : ''}">`;
-      html += `<div class="text-center py-3 border-b border-outline-variant ${isToday ? 'bg-primary text-white' : ''}">`;
-      html += `<div class="font-label-mono text-[10px] ${isToday ? 'text-white/80' : 'text-secondary'}">${App.getDayName(date.getDay())}</div>`;
-      html += `<div class="font-headline-sm text-[18px] ${isToday ? 'text-white' : 'text-on-surface'}">${date.getDate()}</div>`;
+      html += `<div class="flex flex-col flex-1 ${isToday ? 'bg-primary/[0.03]' : ''} ${i < 6 ? 'border-r border-outline-variant' : ''}" data-date="${dateStr}">`;
+      html += `<div class="text-center py-2 border-b border-outline-variant ${isToday ? 'bg-primary text-white' : ''}">`;
+      html += `<div class="font-label-mono text-[9px] ${isToday ? 'text-white/80' : 'text-secondary'}">${App.getDayName(date.getDay())}</div>`;
+      html += `<div class="font-headline-sm text-[16px] ${isToday ? 'text-white' : 'text-on-surface'} leading-tight">${date.getDate()}</div>`;
       html += `</div>`;
-      html += `<div class="flex-1 p-1 space-y-1 overflow-auto max-h-[calc(100vh-200px)]">`;
-      if (dayEvents.length === 0) {
-        html += `<div class="text-[10px] text-on-surface-variant/40 text-center mt-4">Sem eventos</div>`;
-      } else {
-        dayEvents.forEach(evt => {
-          html += `<div class="event-block cursor-pointer text-[11px]" data-event-id="${evt.id}">`;
+      html += `<div class="flex-1 flex flex-col p-1.5 gap-1 overflow-auto week-content">`;
+      if (dayEvents.length > 0) {
+        dayEvents.slice(0, 3).forEach(evt => {
+          html += `<div class="text-[10px] px-1.5 py-1 rounded truncate cursor-pointer hover:opacity-80" style="background:rgba(4,89,197,0.08);color:#0459c5;border-left:2px solid #0459c5" data-event-id="${evt.id}">`;
           html += `<div class="font-semibold truncate">${evt.title}</div>`;
-          if (evt.startTime) html += `<div class="text-[10px] opacity-60">${evt.startTime}${evt.endTime ? ' — ' + evt.endTime : ''}</div>`;
+          if (evt.startTime) html += `<div class="opacity-60">${evt.startTime}</div>`;
           html += `</div>`;
         });
+        if (dayEvents.length > 3) {
+          html += `<div class="text-[9px] text-on-surface-variant font-semibold text-center">+${dayEvents.length - 3}</div>`;
+        }
       }
       html += `</div>`;
       html += `</div>`;
     }
     weekGrid.innerHTML = html;
 
-    weekGrid.querySelectorAll('.event-block').forEach(el => {
+    weekGrid.querySelectorAll('[data-event-id]').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         const evt = App.events.find(ev => ev.id === el.dataset.eventId);
         if (evt) showDetail(evt);
+      });
+    });
+
+    // Append highlight canvases
+    weekGrid.querySelectorAll('[data-date]').forEach(col => {
+      const ds = col.dataset.date;
+      const hData = drawingStore[`${ds}-highlight`];
+      if (!hData?.strokes?.length) return;
+      const content = col.querySelector('.week-content');
+      if (!content) return;
+      const allPts = hData.strokes.flat();
+      const minX = Math.min(...allPts.map(p => p.x)), maxX = Math.max(...allPts.map(p => p.x));
+      const minY = Math.min(...allPts.map(p => p.y)), maxY = Math.max(...allPts.map(p => p.y));
+      const ox = minX, oy = minY, rX = maxX - minX || 1, rY = maxY - minY || 1;
+
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;height:70px;margin-bottom:4px;border-radius:6px;overflow:hidden;background:rgba(4,89,197,0.04)';
+      const cvs = document.createElement('canvas');
+      cvs.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
+      cvs.width = 1; cvs.height = 1;
+      wrap.appendChild(cvs);
+      content.prepend(wrap);
+
+      requestAnimationFrame(() => {
+        const w = cvs.clientWidth || 80;
+        const h = 70;
+        if (w < 10) return;
+        cvs.width = w * 2; cvs.height = h * 2;
+        const s = Math.min(w / rX, h / rY);
+        const offX = (w - rX * s) / 2, offY = (h - rY * s) / 2;
+        const c = cvs.getContext('2d');
+        c.scale(2, 2);
+        hData.strokes.forEach(stroke => {
+          if (stroke.length < 2) return;
+          c.beginPath();
+          c.moveTo((stroke[0].x - ox) * s + offX, (stroke[0].y - oy) * s + offY);
+          for (let j = 1; j < stroke.length; j++) c.lineTo((stroke[j].x - ox) * s + offX, (stroke[j].y - oy) * s + offY);
+          c.strokeStyle = '#1a1b1f';
+          c.lineWidth = Math.max(1, 1.5 / s * 0.3);
+          c.lineCap = 'round';
+          c.stroke();
+        });
       });
     });
   }

@@ -322,7 +322,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getPos(e) {
       const rect = canvas.getBoundingClientRect();
-      return { x: e.clientX - rect.left, y: e.clientY - rect.top, pressure: e.pressure || 0.5 };
+      const zoom = rect.width / (canvas.clientWidth || rect.width);
+      return { x: (e.clientX - rect.left) / zoom, y: (e.clientY - rect.top) / zoom, pressure: e.pressure || 0.5 };
     }
 
     function redraw() {

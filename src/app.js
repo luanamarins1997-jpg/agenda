@@ -476,6 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startDrawing(e) {
+      if (e.pointerType !== 'pen') return;
       e.preventDefault();
       isDrawing = true;
       currentStroke = [getPos(e)];
@@ -483,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function draw(e) {
-      if (!isDrawing) return;
+      if (!isDrawing || e.pointerType !== 'pen') return;
       e.preventDefault();
       const pos = getPos(e);
       const last = currentStroke[currentStroke.length - 1];

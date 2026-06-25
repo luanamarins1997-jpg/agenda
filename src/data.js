@@ -1,6 +1,6 @@
 const ProAgenda = (() => {
   let state = {
-    currentDate: new Date(2026, 5, 26),
+    currentDate: new Date(2026, 5, 25),
     currentView: 'month',
     selectedDate: null,
     selectedEvent: null,
@@ -60,7 +60,7 @@ const ProAgenda = (() => {
   }
 
   function isToday(date) {
-    const today = new Date(2026, 5, 26);
+    const today = new Date(2026, 5, 25);
     return date.getFullYear() === today.getFullYear() &&
            date.getMonth() === today.getMonth() &&
            date.getDate() === today.getDate();

@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dayEvents = events.filter(e => e.date === dateStr);
       }
 
-      const isToday = dateStr === '2026-06-26';
+      const isToday = dateStr === '2026-06-25';
       const isWeekend = (i % 7 === 0);
       const hasEvents = dayEvents.length > 0;
 
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
       date.setDate(start.getDate() + i);
       const dateStr = App.formatDate(date);
       const dayEvents = events.filter(e => e.date === dateStr);
-      const isToday = dateStr === '2026-06-26';
+      const isToday = dateStr === '2026-06-25';
 
       html += `<div class="flex flex-col flex-1 ${isToday ? 'bg-primary/[0.03]' : ''} ${i < 6 ? 'border-r border-outline-variant' : ''}" data-date="${dateStr}">`;
       html += `<div class="text-center py-2 border-b border-outline-variant ${isToday ? 'bg-primary text-white' : ''}">`;
@@ -549,7 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return evtHour === h;
       });
 
-      const isCurrentHour = (h === 9) && (dateStr === '2026-06-26');
+      const isCurrentHour = (h === 9) && (dateStr === '2026-06-25');
 
       html += `<div class="time-slot flex relative ${isCurrentHour ? 'bg-primary/[0.02]' : ''}">`;
       html += `<div class="w-[80px] shrink-0 flex items-start justify-end py-2 pr-3 border-r border-outline-variant"><span class="font-label-mono text-[10px] text-on-surface opacity-40">${timeStr}</span></div>`;
@@ -602,7 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Current time indicator + scroll to current time
-    if (dateStr === '2026-06-26') {
+    if (dateStr === '2026-06-25') {
       const brasilia = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: 'numeric', minute: 'numeric', hour12: false }).format(new Date()).split(':').map(Number);
       const hour = brasilia[0];
       const min = brasilia[1];
@@ -675,7 +675,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const isToday = dateStr === '2026-06-26';
+        const isToday = dateStr === '2026-06-25';
         html += `<span class="text-center text-[9px] leading-snug ${isToday ? 'bg-primary text-white rounded-full w-4 h-4 inline-flex items-center justify-center mx-auto' : ''}">${day}</span>`;
       }
       html += `</div>`;
@@ -778,7 +778,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Sidebar Next Event ---
   function updateNextEvent() {
-    const today = '2026-06-26';
+    const today = '2026-06-25';
     const todayEvents = App.getEventsForDate(today);
     const sorted = todayEvents.sort((a, b) => {
       if (!a.startTime) return 1;

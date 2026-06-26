@@ -95,6 +95,11 @@ const ProAgenda = (() => {
            date.getDate() === t.getDate();
   }
 
+  // String 'YYYY-MM-DD' do dia de hoje (data local do dispositivo)
+  function getTodayStr() {
+    return formatDate(new Date());
+  }
+
   function getState() { return state; }
 
   function setState(updates) {
@@ -152,7 +157,7 @@ const ProAgenda = (() => {
     getDaysInMonth, getFirstDayOfMonth,
     getMonthName, getShortMonthName,
     getDayName, getFullDayName,
-    formatDate, formatTime, isToday,
+    formatDate, formatTime, isToday, getTodayStr,
     addEvent, updateEvent, deleteEvent,
     addNote, deleteNote, updateNote,
     get events() { return events; },

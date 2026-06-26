@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dayEvents = events.filter(e => e.date === dateStr);
       }
 
-      const isToday = App.isToday(new Date(dateStr));
+      const isToday = dateStr === App.getTodayStr();
       const isWeekend = (i % 7 === 0);
       const hasEvents = dayEvents.length > 0;
 
@@ -199,10 +199,10 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `</div>`;
     }
     monthGrid.innerHTML = html;
-    // Preenche toda a altura disponível (sem cap fixo), para o mês caber numa
-    // página só, sem rolagem e sem sobrar espaço embaixo.
+    // Células compactas (até ~100px por linha). Com a altura 100dvh, o mês cabe
+    // numa página só sem cortar e sem ficar com células enormes/espaçadas demais.
     monthGrid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
-    monthGrid.style.maxHeight = '';
+    monthGrid.style.maxHeight = `${rows * 100}px`;
 
     monthGrid.querySelectorAll('.day-cell').forEach(cell => {
       const ds = cell.dataset.date;
@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
       date.setDate(start.getDate() + i);
       const dateStr = App.formatDate(date);
       const dayEvents = events.filter(e => e.date === dateStr);
-      const isToday = App.isToday(new Date(dateStr));
+      const isToday = dateStr === App.getTodayStr();
 
       html += `<div class="flex flex-col flex-1 ${isToday ? 'bg-primary/[0.03]' : ''} ${i < 6 ? 'border-r border-outline-variant' : ''}" data-date="${dateStr}">`;
       html += `<div class="text-center py-1.5 border-b border-outline-variant ${isToday ? 'bg-primary text-white' : ''}">`;
@@ -865,7 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const goToY = (py) => { if (dayZoom) dayZoom.scrollToY(Math.max(0, py)); };
 
     // Current time indicator + scroll to current time
-    if (App.isToday(new Date(dateStr))) {
+    if (dateStr === App.getTodayStr()) {
       const brasilia = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: 'numeric', minute: 'numeric', hour12: false }).format(new Date()).split(':').map(Number);
       const hour = brasilia[0];
       const min = brasilia[1];
@@ -939,7 +939,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const isToday = App.isToday(new Date(dateStr));
+        const isToday = dateStr === App.getTodayStr();
         const dow = (firstDay + day - 1) % 7;
         const base = dow === 0 ? 'text-error/80' : 'text-on-surface';
         const cls = isToday ? 'bg-primary text-white rounded-full w-5 h-5 inline-flex items-center justify-center font-semibold' : base;

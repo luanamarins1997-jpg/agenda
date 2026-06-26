@@ -249,9 +249,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const isToday = dateStr === App.getTodayStr();
 
       html += `<div class="flex flex-col flex-1 ${isToday ? 'bg-primary/[0.03]' : ''} ${i < 6 ? 'border-r border-outline-variant' : ''}" data-date="${dateStr}">`;
-      html += `<div class="text-center py-1.5 border-b border-outline-variant ${isToday ? 'bg-primary text-white' : ''}">`;
-      html += `<div class="font-label-mono text-[8px] ${isToday ? 'text-white/80' : 'text-secondary'}">${App.getDayName(date.getDay())}</div>`;
-      html += `<div class="font-headline-sm text-[14px] ${isToday ? 'text-white' : 'text-on-surface'} leading-tight">${date.getDate()}</div>`;
+      html += `<div class="text-center py-0.5 border-b border-outline-variant leading-none ${isToday ? 'bg-primary text-white' : ''}">`;
+      html += `<span class="font-label-mono text-[8px] mr-1 ${isToday ? 'text-white/80' : 'text-secondary'}">${App.getDayName(date.getDay())}</span>`;
+      html += `<span class="font-headline-sm text-[12px] ${isToday ? 'text-white' : 'text-on-surface'}">${date.getDate()}</span>`;
       html += `</div>`;
       html += `<div class="flex-1 flex flex-col p-1 gap-0.5 overflow-auto week-content">`;
       if (dayEvents.length > 0) {

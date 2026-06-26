@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   navToday.addEventListener('click', () => {
-    App.setState({ currentDate: new Date(2026, 5, 26) });
+    App.setState({ currentDate: new Date() });
     switchView(App.getState().currentView);
   });
 
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dayEvents = events.filter(e => e.date === dateStr);
       }
 
-      const isToday = dateStr === '2026-06-25';
+      const isToday = App.isToday(new Date(dateStr));
       const isWeekend = (i % 7 === 0);
       const hasEvents = dayEvents.length > 0;
 
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
       date.setDate(start.getDate() + i);
       const dateStr = App.formatDate(date);
       const dayEvents = events.filter(e => e.date === dateStr);
-      const isToday = dateStr === '2026-06-25';
+      const isToday = App.isToday(new Date(dateStr));
 
       html += `<div class="flex flex-col flex-1 ${isToday ? 'bg-primary/[0.03]' : ''} ${i < 6 ? 'border-r border-outline-variant' : ''}" data-date="${dateStr}">`;
       html += `<div class="text-center py-2 border-b border-outline-variant ${isToday ? 'bg-primary text-white' : ''}">`;
@@ -312,7 +312,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Drawing Store ---
-  const drawingStore = {};
+  const STORAGE_KEY = 'drawingStore';
+  const drawingStore = App.load(STORAGE_KEY, {});
+
+  function saveDrawingStore() {
+    App.save(STORAGE_KEY, drawingStore);
+  }
 
   // Paleta de cores dos traços (usada nas barras de ferramentas)
   const PEN_COLORS = [
@@ -434,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const hit = strokes[i].some(p => Math.hypot(p.x - pos.x, p.y - pos.y) <= threshold);
         if (hit) { strokes.splice(i, 1); changed = true; }
       }
-      if (changed) { data.strokes = strokes; drawingStore[key] = data; redraw(); }
+      if (changed) { data.strokes = strokes; drawingStore[key] = data; saveDrawingStore(); redraw(); }
       return changed;
     }
 
@@ -524,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const cur = sectionState[idx];
       sectionState[idx] = cur === 0 || cur === 2 ? 1 : 2;
       data.sectionState = sectionState;
-      drawingStore[key] = data;
+      drawingStore[key] = data; saveDrawingStore();
       redraw();
     }
 
@@ -770,7 +775,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return evtHour === h;
       });
 
-      const isCurrentHour = (h === 9) && (dateStr === '2026-06-25');
+      const isCurrentHour = (h === 9) && App.isToday(d);
 
       html += `<div class="time-slot flex relative ${isCurrentHour ? 'bg-primary/[0.02]' : ''}">`;
       html += `<div class="w-[80px] shrink-0 flex items-start justify-end py-2 pr-3 border-r border-outline-variant"><span class="font-label-mono text-[10px] text-on-surface opacity-40">${timeStr}</span></div>`;
@@ -850,7 +855,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const goToY = (py) => { if (dayZoom) dayZoom.scrollToY(Math.max(0, py)); };
 
     // Current time indicator + scroll to current time
-    if (dateStr === '2026-06-25') {
+    if (App.isToday(new Date(dateStr))) {
       const brasilia = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: 'numeric', minute: 'numeric', hour12: false }).format(new Date()).split(':').map(Number);
       const hour = brasilia[0];
       const min = brasilia[1];
@@ -923,7 +928,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const isToday = dateStr === '2026-06-25';
+        const isToday = App.isToday(new Date(dateStr));
         const dow = (firstDay + day - 1) % 7;
         const base = dow === 0 ? 'text-error/80' : 'text-on-surface';
         const cls = isToday ? 'bg-primary text-white rounded-full w-5 h-5 inline-flex items-center justify-center font-semibold' : base;
@@ -940,7 +945,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const month = parseInt(card.dataset.month);
         const year = parseInt(card.dataset.year);
         App.setState({ currentDate: new Date(year, month, 1) });
-        switchView('month');
+  switchView(App.getState().currentView);
       });
     });
   }
@@ -1066,7 +1071,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Sidebar Next Event ---
   function updateNextEvent() {
-    const today = '2026-06-25';
+    const today = App.formatDate(new Date());
     const todayEvents = App.getEventsForDate(today);
     const sorted = todayEvents.sort((a, b) => {
       if (!a.startTime) return 1;

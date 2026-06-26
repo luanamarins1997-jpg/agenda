@@ -1,18 +1,47 @@
 const ProAgenda = (() => {
   let state = {
-    currentDate: new Date(2026, 5, 25),
+    currentDate: new Date(),
     currentView: 'month',
     selectedDate: null,
     selectedEvent: null,
     notes: []
   };
 
-  const mockEvents = [];
+  const events = [];
 
-  let events = [...mockEvents];
+  // --- Persistence ---
+  function save(key, data) {
+    try { localStorage.setItem('proagenda_' + key, JSON.stringify(data)); } catch (_) {}
+  }
+
+  function load(key, fallback) {
+    try {
+      const v = localStorage.getItem('proagenda_' + key);
+      return v ? JSON.parse(v) : fallback;
+    } catch (_) { return fallback; }
+  }
+
+  function saveState() {
+    save('state', { currentDate: state.currentDate.toISOString(), currentView: state.currentView, notes: state.notes });
+  }
+
+  function loadState() {
+    const saved = load('state', null);
+    if (saved) {
+      state.currentDate = new Date(saved.currentDate);
+      state.currentView = saved.currentView || 'month';
+      state.notes = saved.notes || [];
+    }
+  }
+
+  // Load persisted data on init
+  loadState();
 
   function formatDate(date) {
-    return date.toISOString().split('T')[0];
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   }
 
   function getEventsForDate(dateStr) {
@@ -60,16 +89,17 @@ const ProAgenda = (() => {
   }
 
   function isToday(date) {
-    const today = new Date(2026, 5, 25);
-    return date.getFullYear() === today.getFullYear() &&
-           date.getMonth() === today.getMonth() &&
-           date.getDate() === today.getDate();
+    const t = new Date();
+    return date.getFullYear() === t.getFullYear() &&
+           date.getMonth() === t.getMonth() &&
+           date.getDate() === t.getDate();
   }
 
   function getState() { return state; }
 
   function setState(updates) {
     Object.assign(state, updates);
+    saveState();
   }
 
   function addEvent(evt) {
@@ -89,24 +119,28 @@ const ProAgenda = (() => {
   }
 
   function deleteEvent(id) {
-    events = events.filter(e => e.id !== id);
+    const idx = events.findIndex(e => e.id === id);
+    if (idx !== -1) events.splice(idx, 1);
   }
 
   function addNote(note) {
     note.id = 'note-' + Date.now();
     note.createdAt = new Date().toISOString();
     state.notes.unshift(note);
+    saveState();
     return note;
   }
 
   function deleteNote(id) {
     state.notes = state.notes.filter(n => n.id !== id);
+    saveState();
   }
 
   function updateNote(id, updates) {
     const idx = state.notes.findIndex(n => n.id === id);
     if (idx !== -1) {
       state.notes[idx] = { ...state.notes[idx], ...updates };
+      saveState();
       return state.notes[idx];
     }
     return null;
@@ -121,6 +155,7 @@ const ProAgenda = (() => {
     formatDate, formatTime, isToday,
     addEvent, updateEvent, deleteEvent,
     addNote, deleteNote, updateNote,
-    get events() { return events; }
+    get events() { return events; },
+    save, load
   };
 })();

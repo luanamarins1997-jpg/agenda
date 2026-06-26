@@ -1,18 +1,19 @@
-const CACHE = 'pro-agenda-v3';
-// Caminhos relativos ao escopo do service worker, para funcionar tanto na raiz
-// quanto numa subpasta (ex.: /agenda/).
+const CACHE = 'pro-agenda-v2';
 const urlsToCache = [
   './',
   './index.html',
   './src/style.css',
   './src/data.js',
   './src/app.js',
-  './manifest.json'
+  './manifest.json',
+  'https://cdn.tailwindcss.com?plugins=forms,container-queries',
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Hanken+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap',
+  'https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(urlsToCache)).catch(() => {})
+    caches.open(CACHE).then(cache => cache.addAll(urlsToCache))
   );
   self.skipWaiting();
 });
@@ -26,20 +27,18 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Network-first: sempre busca a versão mais nova quando há internet e
-// atualiza o cache; offline, usa o que estiver salvo. Evita que o app
-// fique preso numa versão antiga depois de uma atualização.
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
   event.respondWith(
-    fetch(event.request).then(response => {
-      if (response && response.status === 200 && response.type === 'basic') {
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+      return fetch(event.request).then(response => {
+        if (!response || response.status !== 200 || response.type !== 'basic') return response;
         const clone = response.clone();
         caches.open(CACHE).then(cache => cache.put(event.request, clone));
-      }
-      return response;
-    }).catch(() =>
-      caches.match(event.request).then(cached => cached || caches.match('./index.html'))
-    )
+        return response;
+      }).catch(() => {
+        return caches.match('./index.html');
+      });
+    })
   );
 });

@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Navigation ---
   function switchView(viewName) {
+    flushSave();
     App.setState({ currentView: viewName });
     [viewMonth, viewWeek, viewDay, viewYear, viewNotes].forEach(v => v.classList.remove('active'));
     navBtns.forEach(btn => {
@@ -315,7 +316,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const STORAGE_KEY = 'drawingStore';
   const drawingStore = App.load(STORAGE_KEY, {});
 
+  let saveTimer = null;
   function saveDrawingStore() {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      App.save(STORAGE_KEY, drawingStore);
+      saveTimer = null;
+    }, 100);
+  }
+  // Salva imediatamente ao navegar para outra view
+  function flushSave() {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
     App.save(STORAGE_KEY, drawingStore);
   }
 
@@ -1241,6 +1252,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js');
   }
+
+  // Salva dados antes de fechar/recarregar a página
+  window.addEventListener('beforeunload', flushSave);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) flushSave(); });
 
   switchView('month');
 });

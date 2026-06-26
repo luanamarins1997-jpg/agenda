@@ -250,19 +250,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const isToday = App.isToday(new Date(dateStr));
 
       html += `<div class="flex flex-col flex-1 ${isToday ? 'bg-primary/[0.03]' : ''} ${i < 6 ? 'border-r border-outline-variant' : ''}" data-date="${dateStr}">`;
-      html += `<div class="text-center py-2 border-b border-outline-variant ${isToday ? 'bg-primary text-white' : ''}">`;
-      html += `<div class="font-label-mono text-[9px] ${isToday ? 'text-white/80' : 'text-secondary'}">${App.getDayName(date.getDay())}</div>`;
-      html += `<div class="font-headline-sm text-[16px] ${isToday ? 'text-white' : 'text-on-surface'} leading-tight">${date.getDate()}</div>`;
+      html += `<div class="text-center py-1.5 border-b border-outline-variant ${isToday ? 'bg-primary text-white' : ''}">`;
+      html += `<div class="font-label-mono text-[8px] ${isToday ? 'text-white/80' : 'text-secondary'}">${App.getDayName(date.getDay())}</div>`;
+      html += `<div class="font-headline-sm text-[14px] ${isToday ? 'text-white' : 'text-on-surface'} leading-tight">${date.getDate()}</div>`;
       html += `</div>`;
-      html += `<div class="flex-1 flex flex-col p-1.5 gap-1 overflow-auto week-content">`;
+      html += `<div class="flex-1 flex flex-col p-1 gap-0.5 overflow-auto week-content">`;
       if (dayEvents.length > 0) {
-        dayEvents.slice(0, 3).forEach(evt => {
-          html += `<div class="text-[10px] px-1.5 py-1 rounded truncate cursor-pointer hover:opacity-80" style="background:rgba(4,89,197,0.08);color:#0459c5;border-left:2px solid #0459c5" data-event-id="${evt.id}">`;
-          html += `<div class="font-semibold truncate">${evt.title}</div>`;
-          html += `</div>`;
+        dayEvents.slice(0, 4).forEach(evt => {
+          html += `<div class="text-[9px] px-1 py-0.5 rounded truncate cursor-pointer hover:opacity-80" style="background:rgba(4,89,197,0.08);color:#0459c5;border-left:1.5px solid #0459c5" data-event-id="${evt.id}">${evt.title}</div>`;
         });
-        if (dayEvents.length > 3) {
-          html += `<div class="text-[9px] text-on-surface-variant font-semibold text-center">+${dayEvents.length - 3}</div>`;
+        if (dayEvents.length > 4) {
+          html += `<div class="text-[8px] text-on-surface-variant font-semibold text-center">+${dayEvents.length - 4}</div>`;
         }
       }
 
@@ -273,9 +271,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dd?.strokes?.length) written.push(h);
       }
       if (written.length) {
-        written.forEach(h => {
-          html += `<div class="week-note rounded cursor-pointer hover:bg-primary/5 px-1 py-0.5" data-goto="${dateStr}" data-hour="${h}">`;
-          html += `<canvas class="week-note-thumb" data-key="${dateStr}-${h}" style="height:28px;width:100%"></canvas>`;
+        written.slice(0, 5).forEach(h => {
+          html += `<div class="week-note rounded cursor-pointer hover:bg-primary/5 px-0.5" data-goto="${dateStr}" data-hour="${h}">`;
+          html += `<canvas class="week-note-thumb" data-key="${dateStr}-${h}" style="height:22px;width:100%"></canvas>`;
           html += `</div>`;
         });
       }

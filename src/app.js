@@ -199,10 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `</div>`;
     }
     monthGrid.innerHTML = html;
-    // Células compactas (até ~100px por linha). Com a altura 100dvh, o mês cabe
-    // numa página só sem cortar e sem ficar com células enormes/espaçadas demais.
+    // Preenche toda a altura disponível, para o mês caber numa página só.
     monthGrid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
-    monthGrid.style.maxHeight = `${rows * 100}px`;
+    monthGrid.style.maxHeight = '';
 
     monthGrid.querySelectorAll('.day-cell').forEach(cell => {
       const ds = cell.dataset.date;

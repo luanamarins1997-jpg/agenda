@@ -1,16 +1,18 @@
-const CACHE = 'pro-agenda-v2';
+const CACHE = 'pro-agenda-v3';
+// Caminhos relativos ao escopo do service worker, para funcionar tanto na raiz
+// quanto numa subpasta (ex.: /agenda/).
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/src/style.css',
-  '/src/data.js',
-  '/src/app.js',
-  '/manifest.json'
+  './',
+  './index.html',
+  './src/style.css',
+  './src/data.js',
+  './src/app.js',
+  './manifest.json'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE).then(cache => cache.addAll(urlsToCache)).catch(() => {})
   );
   self.skipWaiting();
 });
@@ -37,7 +39,7 @@ self.addEventListener('fetch', event => {
       }
       return response;
     }).catch(() =>
-      caches.match(event.request).then(cached => cached || caches.match('/index.html'))
+      caches.match(event.request).then(cached => cached || caches.match('./index.html'))
     )
   );
 });

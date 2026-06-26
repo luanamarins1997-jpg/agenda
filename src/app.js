@@ -1249,9 +1249,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- Init ---
-  // Register service worker
+  // Register service worker (caminho relativo: funciona na raiz ou em subpasta)
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js');
+    navigator.serviceWorker.register('service-worker.js');
   }
 
   switchView('month');

@@ -444,20 +444,6 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, w, h);
 
-      // Linhas-guia das 3 tarefas, alinhadas com as bolinhas de check
-      if (opts.guides) {
-        const tH = h / 3;
-        ctx.strokeStyle = 'rgba(4, 89, 197, 0.07)';
-        ctx.lineWidth = 1;
-        for (let i = 0; i < 3; i++) {
-          const y = tH * (i + 0.5);
-          ctx.beginPath();
-          ctx.moveTo(6, y);
-          ctx.lineTo(w - 6, y);
-          ctx.stroke();
-        }
-      }
-
       strokes.forEach(stroke => {
         if (stroke.length < 2) return;
         ctx.beginPath();
@@ -477,6 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillRect(0, i * thirdH, w, thirdH);
       }
 
+      recomputeWritten();
       updateCircles();
     }
 
@@ -579,18 +566,28 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!isDrawing) return;
       isDrawing = false;
       if (currentStroke.length > 1) {
-        const rectH = container.getBoundingClientRect().height;
-        const thirdH = rectH / 3;
-        currentStroke.forEach(p => {
-          const idx = p.y < thirdH ? 0 : p.y < thirdH * 2 ? 1 : 2;
-          written[idx] = true;
-        });
         strokes.push(currentStroke);
         data = { strokes, sectionState, written };
         drawingStore[key] = data;
-        redraw(); // re-renderiza nítido (oversample) e atualiza marcadores
+        redraw(); // recalcula as linhas escritas, re-renderiza nítido e atualiza marcadores
         if (opts.onStroke) opts.onStroke(api);
       }
+    }
+
+    // Cada traço pertence a UMA linha (terço), pela altura do seu centro.
+    // Usa clientHeight (espaço do próprio canvas, sem zoom) para acertar em qualquer zoom.
+    function recomputeWritten() {
+      written[0] = written[1] = written[2] = false;
+      const h = container.clientHeight || 1;
+      const t = h / 3;
+      strokes.forEach(s => {
+        if (!s.length) return;
+        let sum = 0;
+        for (const p of s) sum += p.y;
+        const cy = sum / s.length;
+        const idx = cy < t ? 0 : cy < 2 * t ? 1 : 2;
+        written[idx] = true;
+      });
     }
 
     canvas.addEventListener('pointerdown', startDrawing, { passive: false });
@@ -802,7 +799,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const inst = initCanvas(canvas, h, dateStr, {
         tool: dayTool,
         oversample: 3,
-        guides: true,
         onStroke: (i) => dayUndoStack.push(i)
       });
       canvasInstances.push(inst);

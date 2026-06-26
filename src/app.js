@@ -928,7 +928,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const firstDay = App.getFirstDayOfMonth(year, m);
       const events = App.getEventsForMonth(year, m);
 
-      const isCurrentMonth = (year === 2026 && m === 5);
+      const now = new Date();
+      const isCurrentMonth = (year === now.getFullYear() && m === now.getMonth());
       html += `<div class="year-month-card${isCurrentMonth ? ' year-month-current' : ''}" data-month="${m}" data-year="${year}">`;
       html += `<div class="font-headline-sm text-[15px] ${isCurrentMonth ? 'text-primary' : 'text-on-surface'} mb-2 font-semibold text-center">${App.getMonthName(m)}</div>`;
       html += `<div class="year-days grid grid-cols-7 flex-1 place-items-center">`;

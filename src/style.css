@@ -133,14 +133,16 @@
   background: rgba(4, 89, 197, 0.03);
 }
 .year-days {
-  row-gap: 2px;
-  grid-auto-rows: 1fr;
+  row-gap: 4px;
+  grid-auto-rows: auto;
+  align-content: center;
 }
 .year-days span {
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  aspect-ratio: 1;
 }
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);

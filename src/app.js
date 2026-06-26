@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const sidebarDayMonth = $('sidebar-day-month');
   const detailOverlay = $('detail-overlay');
   const detailContent = $('detail-content');
-  const fab = $('fab');
   const navBtns = document.querySelectorAll('.nav-btn');
 
   let editingNoteId = null;
@@ -1222,32 +1221,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- FAB ---
-  fab.addEventListener('click', () => {
-    const view = App.getState().currentView;
-    if (view === 'notes') {
-      openNotesEditor(null);
-    } else {
-      const today = App.formatDate(App.getState().currentDate);
-      const title = prompt('Novo evento:');
-      if (title) {
-        App.addEvent({
-          title,
-          date: today,
-          startTime: '12:00',
-          endTime: '13:00',
-          description: '',
-          color: '#0459c5',
-          completed: false,
-          tasks: []
-        });
-        if (view === 'month') renderMonth();
-        else if (view === 'day') renderDay();
-        else if (view === 'week') renderWeek();
-        updateNextEvent();
-      }
-    }
-  });
-
   // --- Init ---
   // Register service worker (caminho relativo: funciona na raiz ou em subpasta)
   if ('serviceWorker' in navigator) {

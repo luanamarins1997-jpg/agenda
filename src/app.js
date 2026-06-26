@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const sidebarDayMonth = $('sidebar-day-month');
   const detailOverlay = $('detail-overlay');
   const detailContent = $('detail-content');
+  const notesFab = $('notes-fab');
   const navBtns = document.querySelectorAll('.nav-btn');
 
   let editingNoteId = null;
@@ -56,6 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     if (daySidebar) {
       daySidebar.classList.toggle('hidden', viewName !== 'day');
+    }
+    if (notesFab) {
+      notesFab.classList.toggle('hidden', viewName !== 'notes');
     }
     if (viewName === 'month') viewMonth.classList.add('active');
     else if (viewName === 'week') viewWeek.classList.add('active');
@@ -983,6 +987,7 @@ document.addEventListener('DOMContentLoaded', () => {
     notesDeleteBtn.classList.remove('hidden');
     notesEditor.classList.remove('hidden');
     notesList.classList.add('hidden');
+    if (notesFab) notesFab.classList.add('hidden'); // some ao editar
     notesEditorTitle.value = note.title || '';
 
     if (!notesInstance) {
@@ -1010,6 +1015,7 @@ document.addEventListener('DOMContentLoaded', () => {
     notesDeleteBtn.classList.add('hidden');
     notesEditor.classList.add('hidden');
     notesList.classList.remove('hidden');
+    if (notesFab) notesFab.classList.remove('hidden'); // volta na lista
     editingNoteId = null;
     renderNotes();
   }
@@ -1043,8 +1049,11 @@ document.addEventListener('DOMContentLoaded', () => {
     notesDeleteBtn.classList.add('hidden');
     notesEditor.classList.add('hidden');
     notesList.classList.remove('hidden');
+    if (notesFab) notesFab.classList.remove('hidden'); // volta na lista
     renderNotes();
   });
+
+  notesFab.addEventListener('click', () => openNotesEditor(null));
 
   // --- Sidebar Day Info ---
   function updateDaySidebar() {

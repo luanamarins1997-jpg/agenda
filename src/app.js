@@ -576,8 +576,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentStroke.length > 1) {
         strokes.push(currentStroke);
         data = { strokes, sectionState, written };
-        drawingStore[key] = data;
-        redraw(); // recalcula as linhas escritas, re-renderiza nítido e atualiza marcadores
+        drawingStore[key] = data; saveDrawingStore();
+        redraw();
         if (opts.onStroke) opts.onStroke(api);
       }
     }

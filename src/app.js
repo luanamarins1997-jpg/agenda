@@ -195,8 +195,10 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `</div>`;
     }
     monthGrid.innerHTML = html;
-    monthGrid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-    monthGrid.style.maxHeight = `${rows * 100}px`;
+    // Preenche toda a altura disponível (sem cap fixo), para o mês caber numa
+    // página só, sem rolagem e sem sobrar espaço embaixo.
+    monthGrid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
+    monthGrid.style.maxHeight = '';
 
     monthGrid.querySelectorAll('.day-cell').forEach(cell => {
       const ds = cell.dataset.date;
@@ -253,7 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dayEvents.slice(0, 3).forEach(evt => {
           html += `<div class="text-[10px] px-1.5 py-1 rounded truncate cursor-pointer hover:opacity-80" style="background:rgba(4,89,197,0.08);color:#0459c5;border-left:2px solid #0459c5" data-event-id="${evt.id}">`;
           html += `<div class="font-semibold truncate">${evt.title}</div>`;
-          if (evt.startTime) html += `<div class="opacity-60">${evt.startTime}</div>`;
           html += `</div>`;
         });
         if (dayEvents.length > 3) {
@@ -268,11 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dd?.strokes?.length) written.push(h);
       }
       if (written.length) {
-        html += `<div class="font-label-mono text-[8px] text-secondary uppercase tracking-wider mt-1 mb-0.5">Escrito</div>`;
         written.forEach(h => {
-          html += `<div class="week-note flex items-center gap-1.5 rounded cursor-pointer hover:bg-primary/5 px-1 py-0.5" data-goto="${dateStr}" data-hour="${h}">`;
-          html += `<span class="font-label-mono text-[9px] text-primary shrink-0">${App.formatTime(h, 0)}</span>`;
-          html += `<canvas class="week-note-thumb" data-key="${dateStr}-${h}" style="height:22px;flex:1;min-width:0"></canvas>`;
+          html += `<div class="week-note rounded cursor-pointer hover:bg-primary/5 px-1 py-0.5" data-goto="${dateStr}" data-hour="${h}">`;
+          html += `<canvas class="week-note-thumb" data-key="${dateStr}-${h}" style="height:28px;width:100%"></canvas>`;
           html += `</div>`;
         });
       }
@@ -444,6 +443,20 @@ document.addEventListener('DOMContentLoaded', () => {
       canvas.height = h * dpr;
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, w, h);
+
+      // Linhas-guia das 3 tarefas, alinhadas com as bolinhas de check
+      if (opts.guides) {
+        const tH = h / 3;
+        ctx.strokeStyle = 'rgba(4, 89, 197, 0.07)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 3; i++) {
+          const y = tH * (i + 0.5);
+          ctx.beginPath();
+          ctx.moveTo(6, y);
+          ctx.lineTo(w - 6, y);
+          ctx.stroke();
+        }
+      }
 
       strokes.forEach(stroke => {
         if (stroke.length < 2) return;
@@ -763,9 +776,9 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `<div class="w-[80px] shrink-0 flex items-start justify-end py-2 pr-3 border-r border-outline-variant"><span class="font-label-mono text-[10px] text-on-surface opacity-40">${timeStr}</span></div>`;
       html += `<div class="w-[22px] shrink-0 relative">`;
       html += `<div class="draw-circles absolute inset-0 cursor-pointer">`;
-      html += `<div class="circle-dot absolute w-3 h-3 rounded-full border-2 border-primary/40" style="left:5px;top:6px" data-idx="0"></div>`;
-      html += `<div class="circle-dot absolute w-3 h-3 rounded-full border-2 border-primary/40" style="left:5px;top:50%;margin-top:-6px" data-idx="1"></div>`;
-      html += `<div class="circle-dot absolute w-3 h-3 rounded-full border-2 border-primary/40" style="left:5px;bottom:8px" data-idx="2"></div>`;
+      html += `<div class="circle-dot absolute w-3 h-3 rounded-full border-2 border-primary/40" style="left:5px;top:16.667%;transform:translateY(-50%)" data-idx="0"></div>`;
+      html += `<div class="circle-dot absolute w-3 h-3 rounded-full border-2 border-primary/40" style="left:5px;top:50%;transform:translateY(-50%)" data-idx="1"></div>`;
+      html += `<div class="circle-dot absolute w-3 h-3 rounded-full border-2 border-primary/40" style="left:5px;top:83.333%;transform:translateY(-50%)" data-idx="2"></div>`;
       html += `</div>`;
       html += `<div class="absolute right-0 top-1 bottom-1 w-px bg-outline-variant/10"></div>`;
       html += `</div>`;
@@ -789,6 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const inst = initCanvas(canvas, h, dateStr, {
         tool: dayTool,
         oversample: 3,
+        guides: true,
         onStroke: (i) => dayUndoStack.push(i)
       });
       canvasInstances.push(inst);

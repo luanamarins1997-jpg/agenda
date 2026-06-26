@@ -14,6 +14,7 @@
   cursor: pointer;
   position: relative;
   min-height: 0;
+  overflow: hidden;
 }
 .day-cell:hover {
   background-color: rgba(4, 89, 197, 0.02);

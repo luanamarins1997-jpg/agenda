@@ -775,7 +775,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return evtHour === h;
       });
 
-      const isCurrentHour = (h === 9) && App.isToday(d);
+      const currentHour = App.isToday(d) ? parseInt(new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: 'numeric', hour12: false }).format(new Date())) : -1;
+      const isCurrentHour = h === currentHour;
 
       html += `<div class="time-slot flex relative ${isCurrentHour ? 'bg-primary/[0.02]' : ''}">`;
       html += `<div class="w-[80px] shrink-0 flex items-start justify-end py-2 pr-3 border-r border-outline-variant"><span class="font-label-mono text-[10px] text-on-surface opacity-40">${timeStr}</span></div>`;

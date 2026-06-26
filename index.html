@@ -122,11 +122,12 @@
         <div id="sidebar-highlight">
           <div class="bg-primary/10 rounded-xl border-l-4 border-primary relative overflow-hidden shadow-sm" style="aspect-ratio:2/1;max-width:100%">
             <div class="absolute top-2 left-3 font-label-mono text-[9px] text-primary/60 uppercase tracking-widest z-10">Destaque</div>
-            <canvas id="highlight-canvas" class="absolute inset-0 w-full h-full" style="touch-action:auto;cursor:crosshair"></canvas>
+            <canvas id="highlight-canvas" class="absolute inset-0 w-full h-full" style="touch-action:none;cursor:crosshair"></canvas>
             <div class="absolute bottom-2 right-3 z-10">
               <span class="material-symbols-outlined text-primary text-lg opacity-80" style="font-variation-settings:'FILL' 1">star</span>
             </div>
           </div>
+          <div id="highlight-tools" class="flex items-center gap-1.5 mt-2 flex-wrap"></div>
         </div>
         <div id="sidebar-next-event" class="bg-surface p-3 rounded-xl border border-outline-variant">
           <h3 class="font-label-mono text-[10px] text-secondary mb-1 tracking-widest uppercase">Próximo evento</h3>
@@ -168,8 +169,8 @@
       </div>
 
       <!-- View: ANO -->
-      <div id="view-year" class="view" style="padding:12px;overflow:hidden">
-        <div id="year-grid" class="grid grid-cols-4 gap-3 h-full"></div>
+      <div id="view-year" class="view" style="padding:16px;overflow:hidden">
+        <div id="year-grid" class="grid grid-cols-4 gap-4 flex-1 min-h-0"></div>
       </div>
 
       <!-- View: NOTAS -->
@@ -185,9 +186,14 @@
                 <button id="notes-delete-btn" class="hidden p-2 hover:bg-error-container rounded-lg text-error">
                   <span class="material-symbols-outlined">delete</span>
                 </button>
+                <div id="notes-tools" class="flex items-center gap-1.5 ml-auto"></div>
               </div>
               <input id="notes-editor-title" type="text" placeholder="Título" class="font-headline-lg text-[28px] text-on-surface bg-transparent border-none outline-none w-full mb-4 placeholder:text-outline-variant">
-              <textarea id="notes-editor-area" placeholder="Escreva sua nota aqui..." rows="20" class="font-body-md text-on-surface bg-surface-container-low rounded-xl p-6 placeholder:text-outline-variant"></textarea>
+              <div id="notes-canvas-wrap" class="relative bg-surface-container-low rounded-xl overflow-hidden" style="touch-action:none;height:62vh">
+                <div class="planner-canvas absolute inset-0 pointer-events-none opacity-60"></div>
+                <canvas id="notes-canvas" class="draw-canvas absolute inset-0 w-full h-full"></canvas>
+                <span id="notes-canvas-hint" class="absolute top-3 left-4 text-[12px] text-outline-variant pointer-events-none">Escreva com a caneta…</span>
+              </div>
             </div>
           </div>
         </div>

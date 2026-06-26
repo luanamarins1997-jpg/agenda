@@ -114,17 +114,32 @@
 }
 .year-month-card {
   border: 1px solid #e5e5ea;
-  border-radius: 10px;
-  padding: 10px 8px;
+  border-radius: 14px;
+  padding: 14px 14px 10px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
   background: #fff;
+  min-height: 0;
 }
 .year-month-card:hover {
   background-color: rgba(4, 89, 197, 0.03);
   box-shadow: 0px 2px 12px rgba(0,0,0,0.08);
+}
+.year-month-current {
+  border-color: rgba(4, 89, 197, 0.5);
+  background: rgba(4, 89, 197, 0.03);
+}
+.year-days {
+  row-gap: 2px;
+  grid-auto-rows: 1fr;
+}
+.year-days span {
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -178,6 +193,57 @@
   width: 100%;
   height: 100%;
 }
+
+/* Barra de ferramentas de desenho (cores, borracha, desfazer, limpar) */
+.draw-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.draw-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.draw-swatch:hover { transform: scale(1.1); }
+.draw-swatch.active {
+  box-shadow: 0 0 0 2px #0459c5;
+  transform: scale(1.12);
+}
+.draw-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  color: #5f5e5e;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.draw-tool-btn:hover { background: rgba(4, 89, 197, 0.08); color: #0459c5; }
+.draw-tool-btn.active { background: #0459c5; color: #fff; }
+.draw-tools-sep {
+  width: 1px;
+  height: 18px;
+  background: #c2c6d5;
+  margin: 0 2px;
+}
+.note-thumb-wrap {
+  height: 96px;
+  border-radius: 8px;
+  background: #faf9fe;
+  border: 1px solid #eeedf3;
+  overflow: hidden;
+}
+.note-thumb { display: block; width: 100%; height: 100%; }
+.week-note-thumb { display: block; }
 .draw-canvas-bg {
   background-image:
     linear-gradient(to right, #f4f3f8 0.5px, transparent 0.5px),

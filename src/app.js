@@ -16,7 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const yearGrid = $('year-grid');
   const notesList = $('notes-list');
   const notesEditor = $('notes-editor');
-  const notesEditorArea = $('notes-editor-area');
+  const notesCanvas = $('notes-canvas');
+  const notesCanvasHint = $('notes-canvas-hint');
+  const notesToolsEl = $('notes-tools');
   const notesEditorTitle = $('notes-editor-title');
   const notesBackBtn = $('notes-back-btn');
   const notesDeleteBtn = $('notes-delete-btn');
@@ -41,6 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let highlightInstance = null;
   let dayZoom = null;
   let penDrawing = false;
+  const highlightTool = { color: '#1a1b1f', erasing: false };
+  const notesTool = { color: '#1a1b1f', erasing: false };
+  let notesInstance = null;
 
 
   // --- Navigation ---
@@ -198,47 +203,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (ds) {
         const hData = drawingStore[`${ds}-highlight`];
         if (hData?.strokes?.length > 0) {
-          const allPts = hData.strokes.flat();
-          const minX = Math.min(...allPts.map(p => p.x)), maxX = Math.max(...allPts.map(p => p.x));
-          const minY = Math.min(...allPts.map(p => p.y)), maxY = Math.max(...allPts.map(p => p.y));
-          const ox = minX, oy = minY;
-          const rangeX = maxX - minX || 1, rangeY = maxY - minY || 1;
-
           const cvs = document.createElement('canvas');
-          cvs.width = 1;
-          cvs.height = 1;
           cvs.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
-          const fallbackW = monthGrid.clientWidth / 7 || 171;
-          const drawOnCanvas = () => {
-            const w = cell.clientWidth || fallbackW;
-            const h = cell.clientHeight || 80;
-            if (w < 20 || h < 20) return;
-            const pad = { top: 22, bottom: 4, left: 4, right: 4 };
-            const dw = w - pad.left - pad.right;
-            const dh = h - pad.top - pad.bottom;
-            if (dw < 10 || dh < 10) return;
-            cvs.width = w * 2;
-            cvs.height = h * 2;
-            cvs.style.width = w + 'px';
-            cvs.style.height = h + 'px';
-            const s = Math.min(dw / rangeX, dh / rangeY) * 0.85;
-            const offsetX = pad.left + (dw - rangeX * s) / 2;
-            const offsetY = pad.top + (dh - rangeY * s) / 2;
-            const c = cvs.getContext('2d');
-            c.scale(2, 2);
-            c.strokeStyle = '#1a1b1f';
-            c.lineCap = 'round';
-            c.lineJoin = 'round';
-            c.lineWidth = Math.max(1, 1.5 / s * 0.4);
-            hData.strokes.forEach(stroke => {
-              if (stroke.length < 2) return;
-              c.beginPath();
-              c.moveTo((stroke[0].x - ox) * s + offsetX, (stroke[0].y - oy) * s + offsetY);
-              for (let i = 1; i < stroke.length; i++) c.lineTo((stroke[i].x - ox) * s + offsetX, (stroke[i].y - oy) * s + offsetY);
-              c.stroke();
-            });
-          };
-          requestAnimationFrame(drawOnCanvas);
+          requestAnimationFrame(() => drawStrokesPreview(cvs, hData.strokes, { pad: { top: 22, bottom: 4, left: 4, right: 4 }, lineScale: 0.4 }));
           cell.appendChild(cvs);
         }
       }
@@ -293,10 +260,45 @@ document.addEventListener('DOMContentLoaded', () => {
           html += `<div class="text-[9px] text-on-surface-variant font-semibold text-center">+${dayEvents.length - 3}</div>`;
         }
       }
+
+      // Lista do que foi escrito (caneta) em cada horário do dia
+      const written = [];
+      for (let h = 0; h < 24; h++) {
+        const dd = drawingStore[`${dateStr}-${h}`];
+        if (dd?.strokes?.length) written.push(h);
+      }
+      if (written.length) {
+        html += `<div class="font-label-mono text-[8px] text-secondary uppercase tracking-wider mt-1 mb-0.5">Escrito</div>`;
+        written.forEach(h => {
+          html += `<div class="week-note flex items-center gap-1.5 rounded cursor-pointer hover:bg-primary/5 px-1 py-0.5" data-goto="${dateStr}" data-hour="${h}">`;
+          html += `<span class="font-label-mono text-[9px] text-primary shrink-0">${App.formatTime(h, 0)}</span>`;
+          html += `<canvas class="week-note-thumb" data-key="${dateStr}-${h}" style="height:22px;flex:1;min-width:0"></canvas>`;
+          html += `</div>`;
+        });
+      }
+
       html += `</div>`;
       html += `</div>`;
     }
     weekGrid.innerHTML = html;
+
+    // Desenha as miniaturas do que foi escrito
+    requestAnimationFrame(() => {
+      weekGrid.querySelectorAll('.week-note-thumb').forEach(cvs => {
+        const dd = drawingStore[cvs.dataset.key];
+        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 2, bottom: 2, left: 2, right: 2 }, lineScale: 0.5 });
+      });
+    });
+
+    // Toque numa anotação leva ao dia naquele horário
+    weekGrid.querySelectorAll('.week-note').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const parts = el.dataset.goto.split('-');
+        App.setState({ currentDate: new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])) });
+        switchView('day');
+      });
+    });
 
     weekGrid.querySelectorAll('[data-event-id]').forEach(el => {
       el.addEventListener('click', (e) => {
@@ -310,15 +312,110 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Drawing Store ---
   const drawingStore = {};
 
-  function initCanvas(canvas, hour, dateStr) {
+  // Paleta de cores dos traços (usada nas barras de ferramentas)
+  const PEN_COLORS = [
+    { name: 'Preto', value: '#1a1b1f' },
+    { name: 'Azul', value: '#0459c5' },
+    { name: 'Vermelho', value: '#ba1a1a' },
+    { name: 'Verde', value: '#1b873f' },
+    { name: 'Laranja', value: '#e8830c' }
+  ];
+
+  // Desenha os traços (strokes) ajustados dentro de um elemento <canvas> de preview.
+  // Reutilizado no mês, na semana e na lista de notas.
+  function drawStrokesPreview(cvs, strokes, opts = {}) {
+    if (!strokes || !strokes.length) return;
+    const pad = opts.pad || { top: 4, bottom: 4, left: 4, right: 4 };
+    const allPts = strokes.flat();
+    if (!allPts.length) return;
+    const minX = Math.min(...allPts.map(p => p.x)), maxX = Math.max(...allPts.map(p => p.x));
+    const minY = Math.min(...allPts.map(p => p.y)), maxY = Math.max(...allPts.map(p => p.y));
+    const rangeX = maxX - minX || 1, rangeY = maxY - minY || 1;
+    const w = cvs.clientWidth, h = cvs.clientHeight;
+    if (w < 10 || h < 10) return;
+    const dw = w - pad.left - pad.right, dh = h - pad.top - pad.bottom;
+    if (dw < 6 || dh < 6) return;
+    const dpr = (window.devicePixelRatio || 1) * 2;
+    cvs.width = w * dpr; cvs.height = h * dpr;
+    const s = Math.min(dw / rangeX, dh / rangeY) * 0.92;
+    const offsetX = pad.left + (dw - rangeX * s) / 2;
+    const offsetY = pad.top + (dh - rangeY * s) / 2;
+    const c = cvs.getContext('2d');
+    c.scale(dpr, dpr);
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    c.lineWidth = Math.max(0.8, 1.5 / s * (opts.lineScale || 0.5));
+    strokes.forEach(stroke => {
+      if (stroke.length < 2) return;
+      c.strokeStyle = stroke.color || '#1a1b1f';
+      c.beginPath();
+      c.moveTo((stroke[0].x - minX) * s + offsetX, (stroke[0].y - minY) * s + offsetY);
+      for (let i = 1; i < stroke.length; i++) c.lineTo((stroke[i].x - minX) * s + offsetX, (stroke[i].y - minY) * s + offsetY);
+      c.stroke();
+    });
+  }
+
+  // Cria uma barra de ferramentas de desenho (cores, borracha, desfazer, limpar).
+  // `tool` é um objeto compartilhado { color, erasing } que os canvas leem.
+  function buildDrawTools(tool, handlers = {}) {
+    const bar = document.createElement('div');
+    bar.className = 'draw-tools';
+    const swatches = PEN_COLORS.map(col => {
+      const b = document.createElement('button');
+      b.className = 'draw-swatch';
+      b.style.background = col.value;
+      b.title = col.name;
+      b.dataset.color = col.value;
+      if (col.value === tool.color) b.classList.add('active');
+      b.addEventListener('click', () => {
+        tool.color = col.value;
+        tool.erasing = false;
+        bar.querySelectorAll('.draw-swatch').forEach(s => s.classList.toggle('active', s.dataset.color === col.value));
+        eraserBtn.classList.remove('active');
+        handlers.onColor && handlers.onColor(col.value);
+      });
+      return b;
+    });
+    const mkIcon = (icon, title) => {
+      const b = document.createElement('button');
+      b.className = 'draw-tool-btn';
+      b.title = title;
+      b.innerHTML = `<span class="material-symbols-outlined text-[18px]">${icon}</span>`;
+      return b;
+    };
+    const eraserBtn = mkIcon('ink_eraser', 'Borracha');
+    eraserBtn.addEventListener('click', () => {
+      tool.erasing = !tool.erasing;
+      eraserBtn.classList.toggle('active', tool.erasing);
+      if (tool.erasing) bar.querySelectorAll('.draw-swatch').forEach(s => s.classList.remove('active'));
+      else bar.querySelectorAll('.draw-swatch').forEach(s => s.classList.toggle('active', s.dataset.color === tool.color));
+    });
+    const undoBtn = mkIcon('undo', 'Desfazer');
+    undoBtn.addEventListener('click', () => handlers.onUndo && handlers.onUndo());
+    const clearBtn = mkIcon('delete', 'Limpar tudo');
+    clearBtn.addEventListener('click', () => handlers.onClear && handlers.onClear());
+
+    swatches.forEach(s => bar.appendChild(s));
+    const sep = document.createElement('div');
+    sep.className = 'draw-tools-sep';
+    bar.appendChild(sep);
+    bar.appendChild(eraserBtn);
+    bar.appendChild(undoBtn);
+    bar.appendChild(clearBtn);
+    return bar;
+  }
+
+  function initCanvas(canvas, hour, dateStr, opts = {}) {
     const ctx = canvas.getContext('2d');
     const container = canvas.parentElement;
+    const tool = opts.tool || { color: '#1a1b1f', erasing: false };
+    const oversample = opts.oversample || 1;
     let key = `${dateStr}-${hour}`;
     let data = drawingStore[key] || { strokes: [], sectionState: [0, 0, 0], written: [false, false, false] };
     let strokes = data.strokes;
     let sectionState = data.sectionState;
     let written = data.written;
     let isDrawing = false;
+    let erasing = false;
     let currentStroke = [];
     let resizeTimer;
 
@@ -328,8 +425,19 @@ document.addEventListener('DOMContentLoaded', () => {
       return { x: (e.clientX - rect.left) / zoom, y: (e.clientY - rect.top) / zoom, pressure: e.pressure || 0.5 };
     }
 
+    // Apaga (remove) traços cujos pontos passem perto de `pos`.
+    function eraseAt(pos, threshold = 14) {
+      let changed = false;
+      for (let i = strokes.length - 1; i >= 0; i--) {
+        const hit = strokes[i].some(p => Math.hypot(p.x - pos.x, p.y - pos.y) <= threshold);
+        if (hit) { strokes.splice(i, 1); changed = true; }
+      }
+      if (changed) { data.strokes = strokes; drawingStore[key] = data; redraw(); }
+      return changed;
+    }
+
     function redraw() {
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = (window.devicePixelRatio || 1) * (strokes.length ? oversample : 1);
       const w = container.clientWidth;
       const h = container.clientHeight;
       canvas.width = w * dpr;
@@ -342,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.beginPath();
         ctx.moveTo(stroke[0].x, stroke[0].y);
         for (let i = 1; i < stroke.length; i++) ctx.lineTo(stroke[i].x, stroke[i].y);
-        ctx.strokeStyle = '#1a1b1f';
+        ctx.strokeStyle = stroke.color || '#1a1b1f';
         ctx.lineWidth = Math.max(1.5, (stroke[0].pressure || 0.5) * 4);
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -420,15 +528,23 @@ document.addEventListener('DOMContentLoaded', () => {
     function startDrawing(e) {
       if (e.pointerType === 'pen') {
         e.preventDefault();
-        isDrawing = true;
         penDrawing = true;
-        currentStroke = [getPos(e)];
-        canvas.setPointerCapture(e.pointerId);
+        if (tool.erasing) {
+          erasing = true;
+          eraseAt(getPos(e));
+        } else {
+          isDrawing = true;
+          currentStroke = [getPos(e)];
+          currentStroke.color = tool.color;
+        }
+        try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
       }
     }
 
     function draw(e) {
-      if (!isDrawing || e.pointerType !== 'pen') return;
+      if (e.pointerType !== 'pen') return;
+      if (erasing) { e.preventDefault(); eraseAt(getPos(e)); return; }
+      if (!isDrawing) return;
       e.preventDefault();
       const pos = getPos(e);
       const last = currentStroke[currentStroke.length - 1];
@@ -436,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.beginPath();
       ctx.moveTo(last.x, last.y);
       ctx.lineTo(pos.x, pos.y);
-      ctx.strokeStyle = '#1a1b1f';
+      ctx.strokeStyle = tool.color;
       ctx.lineWidth = Math.max(1.5, (pos.pressure || 0.5) * 4);
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
@@ -445,6 +561,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function stopDrawing(e) {
       penDrawing = false;
+      try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+      if (erasing) { erasing = false; return; }
       if (!isDrawing) return;
       isDrawing = false;
       if (currentStroke.length > 1) {
@@ -457,10 +575,9 @@ document.addEventListener('DOMContentLoaded', () => {
         strokes.push(currentStroke);
         data = { strokes, sectionState, written };
         drawingStore[key] = data;
-        updateCircles();
-
+        redraw(); // re-renderiza nítido (oversample) e atualiza marcadores
+        if (opts.onStroke) opts.onStroke(api);
       }
-      canvas.releasePointerCapture(e.pointerId);
     }
 
     canvas.addEventListener('pointerdown', startDrawing, { passive: false });
@@ -477,7 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     redraw();
 
-    return {
+    const api = {
       clear() {
         strokes = [];
         sectionState = [0, 0, 0];
@@ -487,6 +604,16 @@ document.addEventListener('DOMContentLoaded', () => {
         redraw();
       },
       toggleDone,
+      undoLast() {
+        if (!strokes.length) return false;
+        strokes.pop();
+        data.strokes = strokes;
+        drawingStore[key] = data;
+        redraw();
+        return true;
+      },
+      hasStrokes() { return strokes.length > 0; },
+      redraw,
       reload(newKey) {
         key = newKey;
         data = drawingStore[key] || { strokes: [], sectionState: [0, 0, 0], written: [false, false, false] };
@@ -496,6 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
         redraw();
       }
     };
+    return api;
   }
 
   // Pan + pinch-zoom totalmente controlado em JS para a grade do dia.
@@ -615,9 +743,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dayEvents = App.getEventsForDate(dateStr);
 
     let html = `<div class="day-toolbar shrink-0">
-      <button id="clear-day-btn" class="text-secondary hover:text-error transition-colors" title="Limpar escritas">
-        <span class="material-symbols-outlined text-[18px] align-middle">ink_eraser</span>
-      </button>
+      <div id="day-tools" class="flex items-center gap-1.5"></div>
       <span class="text-[11px] text-on-surface-variant/40 font-body-sm ml-auto">Escreva com a caneta</span>
     </div>
     <div id="day-zoom-viewport" class="flex-1 relative overflow-hidden" style="touch-action:none">
@@ -655,10 +781,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     dayGrid.innerHTML = html;
 
+    const dayTool = { color: '#1a1b1f', erasing: false };
+    const dayUndoStack = []; // ordem dos traços entre os 24 canvas, para desfazer
     const canvasInstances = [];
     dayGrid.querySelectorAll('.draw-canvas').forEach(canvas => {
       const h = parseInt(canvas.dataset.hour);
-      const inst = initCanvas(canvas, h, dateStr);
+      const inst = initCanvas(canvas, h, dateStr, {
+        tool: dayTool,
+        oversample: 3,
+        onStroke: (i) => dayUndoStack.push(i)
+      });
       canvasInstances.push(inst);
     });
 
@@ -675,14 +807,23 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Clear all button
-    const clearBtn = document.getElementById('clear-day-btn');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', () => {
-        if (confirm('Limpar todos os desenhos do dia?')) {
-          canvasInstances.forEach(inst => inst.clear());
+    // Barra de ferramentas (cores, borracha, desfazer, limpar) do dia
+    const dayToolsEl = document.getElementById('day-tools');
+    if (dayToolsEl) {
+      dayToolsEl.appendChild(buildDrawTools(dayTool, {
+        onUndo: () => {
+          while (dayUndoStack.length) {
+            const inst = dayUndoStack.pop();
+            if (inst.undoLast()) break;
+          }
+        },
+        onClear: () => {
+          if (confirm('Limpar todos os desenhos do dia?')) {
+            canvasInstances.forEach(inst => inst.clear());
+            dayUndoStack.length = 0;
+          }
         }
-      });
+      }));
     }
 
     // Pan + pinch-zoom (dedos) na grade do dia. A grade e recriada a cada render,
@@ -728,9 +869,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!highlightCanvasInited) {
       const el = document.getElementById('highlight-canvas');
       if (el) {
-        highlightInstance = initCanvas(el, -1, dateStr);
+        highlightInstance = initCanvas(el, -1, dateStr, { tool: highlightTool, oversample: 3 });
         highlightInstance.reload(highlightKey);
         highlightCanvasInited = true;
+        const toolsEl = document.getElementById('highlight-tools');
+        if (toolsEl && !toolsEl.childElementCount) {
+          toolsEl.appendChild(buildDrawTools(highlightTool, {
+            onUndo: () => highlightInstance.undoLast(),
+            onClear: () => highlightInstance.clear()
+          }));
+        }
       }
     } else if (highlightInstance) {
       highlightInstance.reload(highlightKey);
@@ -750,26 +898,29 @@ document.addEventListener('DOMContentLoaded', () => {
       const firstDay = App.getFirstDayOfMonth(year, m);
       const events = App.getEventsForMonth(year, m);
 
-      html += `<div class="year-month-card" data-month="${m}" data-year="${year}">`;
-      html += `<div class="font-headline-sm text-[14px] text-primary mb-1.5 font-semibold">${App.getShortMonthName(m)}</div>`;
-      html += `<div class="grid grid-cols-7 gap-0 justify-items-center">`;
-      ['D','S','T','Q','Q','S','S'].forEach(day => {
-        html += `<span class="text-center text-[8px] text-secondary font-semibold leading-tight">${day}</span>`;
+      const isCurrentMonth = (year === 2026 && m === 5);
+      html += `<div class="year-month-card${isCurrentMonth ? ' year-month-current' : ''}" data-month="${m}" data-year="${year}">`;
+      html += `<div class="font-headline-sm text-[15px] ${isCurrentMonth ? 'text-primary' : 'text-on-surface'} mb-2 font-semibold text-center">${App.getMonthName(m)}</div>`;
+      html += `<div class="year-days grid grid-cols-7 flex-1 place-items-center">`;
+      ['D','S','T','Q','Q','S','S'].forEach((day, idx) => {
+        html += `<span class="text-center text-[9px] ${idx === 0 ? 'text-error/70' : 'text-secondary'} font-semibold">${day}</span>`;
       });
       for (let i = 0; i < firstDay; i++) {
-        html += `<span class="text-[8px]"></span>`;
+        html += `<span></span>`;
       }
       for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const isToday = dateStr === '2026-06-25';
-        const cls = isToday ? 'bg-primary text-white rounded-full w-4.5 h-4.5 inline-flex items-center justify-center' : '';
-        html += `<span class="text-center text-[10px] leading-snug ${cls}">${day}</span>`;
+        const dow = (firstDay + day - 1) % 7;
+        const base = dow === 0 ? 'text-error/80' : 'text-on-surface';
+        const cls = isToday ? 'bg-primary text-white rounded-full w-5 h-5 inline-flex items-center justify-center font-semibold' : base;
+        html += `<span class="text-center text-[11px] ${cls}">${day}</span>`;
       }
       html += `</div>`;
       html += `</div>`;
     }
     yearGrid.innerHTML = html;
-    yearGrid.style.gridTemplateRows = 'repeat(3, 1fr)';
+    yearGrid.style.gridTemplateRows = 'repeat(3, minmax(0, 1fr))';
 
     yearGrid.querySelectorAll('.year-month-card').forEach(card => {
       card.addEventListener('click', () => {
@@ -781,23 +932,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Notes ---
+  // --- Notes (escritas à caneta) ---
+  const noteKey = (id) => `note-${id}`;
+
   function renderNotes() {
     const notes = App.getState().notes;
     if (notes.length === 0) {
-      notesList.innerHTML = `<div class="text-center text-on-surface-variant/40 py-12 font-body-md">Nenhuma nota ainda. Toque em + para criar.</div>`;
+      notesList.innerHTML = `<div class="col-span-2 text-center text-on-surface-variant/40 py-12 font-body-md">Nenhuma nota ainda. Toque em + para escrever.</div>`;
       return;
     }
     let html = '';
     notes.forEach(note => {
-      const preview = note.content.substring(0, 100);
       html += `<div class="note-card" data-note-id="${note.id}">`;
-      html += `<div class="font-headline-sm text-[16px] text-primary mb-1">${note.title || 'Sem título'}</div>`;
-      html += `<div class="font-body-sm text-on-surface-variant line-clamp-2">${preview}</div>`;
+      html += `<div class="font-headline-sm text-[16px] text-primary mb-2 truncate">${note.title || 'Sem título'}</div>`;
+      html += `<div class="note-thumb-wrap"><canvas class="note-thumb" data-key="${noteKey(note.id)}"></canvas></div>`;
       html += `<div class="text-[10px] text-on-surface-variant/40 mt-2">${new Date(note.createdAt).toLocaleDateString('pt-BR')}</div>`;
       html += `</div>`;
     });
     notesList.innerHTML = html;
+
+    requestAnimationFrame(() => {
+      notesList.querySelectorAll('.note-thumb').forEach(cvs => {
+        const dd = drawingStore[cvs.dataset.key];
+        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 6, bottom: 6, left: 6, right: 6 }, lineScale: 0.45 });
+      });
+    });
 
     notesList.querySelectorAll('.note-card').forEach(card => {
       card.addEventListener('click', () => {
@@ -808,17 +967,36 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function openNotesEditor(note) {
-    editingNoteId = note ? note.id : null;
+    // Notas novas já são criadas para ter um id (e guardar os traços por id)
+    if (!note) note = App.addNote({ title: '' });
+    editingNoteId = note.id;
     notesBackBtn.classList.remove('hidden');
     notesDeleteBtn.classList.remove('hidden');
     notesEditor.classList.remove('hidden');
     notesList.classList.add('hidden');
-    notesEditorTitle.value = note ? note.title : '';
-    notesEditorArea.value = note ? note.content : '';
-    notesEditorTitle.focus();
+    notesEditorTitle.value = note.title || '';
+
+    if (!notesInstance) {
+      notesInstance = initCanvas(notesCanvas, editingNoteId, 'note', {
+        tool: notesTool,
+        oversample: 2,
+        onStroke: () => { if (notesCanvasHint) notesCanvasHint.style.display = 'none'; }
+      });
+      if (notesToolsEl && !notesToolsEl.childElementCount) {
+        notesToolsEl.appendChild(buildDrawTools(notesTool, {
+          onUndo: () => notesInstance.undoLast(),
+          onClear: () => { notesInstance.clear(); if (notesCanvasHint) notesCanvasHint.style.display = ''; }
+        }));
+      }
+    }
+    notesInstance.reload(noteKey(editingNoteId));
+    if (notesCanvasHint) notesCanvasHint.style.display = notesInstance.hasStrokes() ? 'none' : '';
+    // Garante o redimensionamento correto agora que o editor está visível
+    requestAnimationFrame(() => notesInstance.redraw());
   }
 
   function closeNotesEditor() {
+    saveCurrentNote();
     notesBackBtn.classList.add('hidden');
     notesDeleteBtn.classList.add('hidden');
     notesEditor.classList.add('hidden');
@@ -828,29 +1006,35 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function saveCurrentNote() {
+    if (!editingNoteId) return;
     const title = notesEditorTitle.value.trim();
-    const content = notesEditorArea.value.trim();
-    if (!title && !content) return;
-    if (editingNoteId) {
-      App.updateNote(editingNoteId, { title, content });
+    const hasStrokes = notesInstance && notesInstance.hasStrokes();
+    // Nota vazia (sem título e sem traço) é descartada
+    if (!title && !hasStrokes) {
+      App.deleteNote(editingNoteId);
+      delete drawingStore[noteKey(editingNoteId)];
     } else {
-      App.addNote({ title, content });
+      App.updateNote(editingNoteId, { title });
     }
   }
 
-  notesEditorArea.addEventListener('blur', saveCurrentNote);
   notesEditorTitle.addEventListener('blur', saveCurrentNote);
 
   notesBackBtn.addEventListener('click', () => {
-    saveCurrentNote();
     closeNotesEditor();
   });
 
   notesDeleteBtn.addEventListener('click', () => {
     if (editingNoteId) {
       App.deleteNote(editingNoteId);
+      delete drawingStore[noteKey(editingNoteId)];
+      editingNoteId = null;
     }
-    closeNotesEditor();
+    notesBackBtn.classList.add('hidden');
+    notesDeleteBtn.classList.add('hidden');
+    notesEditor.classList.add('hidden');
+    notesList.classList.remove('hidden');
+    renderNotes();
   });
 
   // --- Sidebar Day Info ---

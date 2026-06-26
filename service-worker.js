@@ -1,4 +1,4 @@
-const CACHE = 'pro-agenda-v1';
+const CACHE = 'pro-agenda-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -24,18 +24,20 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
+// Network-first: sempre busca a versão mais nova quando há internet e
+// atualiza o cache; offline, usa o que estiver salvo. Evita que o app
+// fique preso numa versão antiga depois de uma atualização.
 self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(response => {
-        if (!response || response.status !== 200 || response.type !== 'basic') return response;
+    fetch(event.request).then(response => {
+      if (response && response.status === 200 && response.type === 'basic') {
         const clone = response.clone();
         caches.open(CACHE).then(cache => cache.put(event.request, clone));
-        return response;
-      });
-    }).catch(() => {
-      return caches.match('/index.html');
-    })
+      }
+      return response;
+    }).catch(() =>
+      caches.match(event.request).then(cached => cached || caches.match('/index.html'))
+    )
   );
 });

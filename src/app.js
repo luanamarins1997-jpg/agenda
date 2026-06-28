@@ -234,77 +234,64 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Weekly Calendar ---
+  // --- Weekly Calendar (grade de horas x 7 dias, com a escrita à caneta) ---
   function renderWeek() {
     const d = App.getState().currentDate;
     const start = getWeekStart(d);
-    const events = App.events;
+    const todayStr = App.getTodayStr();
 
-    let html = '';
+    const days = [];
     for (let i = 0; i < 7; i++) {
-      const date = new Date(start);
-      date.setDate(start.getDate() + i);
-      const dateStr = App.formatDate(date);
-      const dayEvents = events.filter(e => e.date === dateStr);
-      const isToday = dateStr === App.getTodayStr();
-
-      html += `<div class="flex flex-col flex-1 ${isToday ? 'bg-primary/[0.03]' : ''} ${i < 6 ? 'border-r border-outline-variant' : ''}" data-date="${dateStr}">`;
-      html += `<div class="text-center py-2 border-b border-outline-variant ${isToday ? 'bg-primary text-white' : ''}">`;
-      html += `<div class="font-label-mono text-[10px] ${isToday ? 'text-white/80' : 'text-secondary'}">${App.getDayName(date.getDay())}</div>`;
-      html += `<div class="font-headline-sm text-[16px] ${isToday ? 'text-white' : 'text-on-surface'} leading-tight">${date.getDate()}</div>`;
-      html += `</div>`;
-      html += `<div class="flex-1 flex flex-col p-1 gap-0.5 overflow-auto week-content">`;
-      if (dayEvents.length > 0) {
-        dayEvents.slice(0, 4).forEach(evt => {
-          html += `<div class="text-[9px] px-1 py-0.5 rounded truncate cursor-pointer hover:opacity-80" style="background:rgba(4,89,197,0.08);color:#0459c5;border-left:1.5px solid #0459c5" data-event-id="${evt.id}">${evt.title}</div>`;
-        });
-        if (dayEvents.length > 4) {
-          html += `<div class="text-[8px] text-on-surface-variant font-semibold text-center">+${dayEvents.length - 4}</div>`;
-        }
-      }
-
-      // Lista do que foi escrito (caneta) em cada horário do dia
-      const written = [];
-      for (let h = 0; h < 24; h++) {
-        const dd = drawingStore[`${dateStr}-${h}`];
-        if (dd?.strokes?.length) written.push(h);
-      }
-      if (written.length) {
-        written.slice(0, 5).forEach(h => {
-          html += `<div class="week-note rounded cursor-pointer hover:bg-primary/5 px-0.5" data-goto="${dateStr}" data-hour="${h}">`;
-          html += `<canvas class="week-note-thumb" data-key="${dateStr}-${h}" style="height:22px;width:100%"></canvas>`;
-          html += `</div>`;
-        });
-      }
-
-      html += `</div>`;
-      html += `</div>`;
+      const dt = new Date(start);
+      dt.setDate(start.getDate() + i);
+      days.push(dt);
     }
+
+    // Cabeçalho: canto vazio + 7 dias
+    let html = `<div class="wk-head">`;
+    html += `<div class="wk-corner"></div>`;
+    days.forEach(dt => {
+      const ds = App.formatDate(dt);
+      const isToday = ds === todayStr;
+      html += `<div class="wk-head-cell ${isToday ? 'wk-today-head' : ''}">`;
+      html += `<span class="wk-dayname">${App.getDayName(dt.getDay())}</span>`;
+      html += `<span class="wk-daynum">${dt.getDate()}</span>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+
+    // Corpo: 24 linhas de hora
+    html += `<div class="wk-body">`;
+    for (let h = 0; h < 24; h++) {
+      html += `<div class="wk-time">${App.formatTime(h, 0)}</div>`;
+      days.forEach(dt => {
+        const ds = App.formatDate(dt);
+        const isToday = ds === todayStr;
+        const key = `${ds}-${h}`;
+        const has = drawingStore[key]?.strokes?.length;
+        html += `<div class="wk-cell ${isToday ? 'wk-today-col' : ''}" data-goto="${ds}">`;
+        if (has) html += `<canvas class="wk-thumb" data-key="${key}"></canvas>`;
+        html += `</div>`;
+      });
+    }
+    html += `</div>`;
+
     weekGrid.innerHTML = html;
 
-    // Desenha as miniaturas do que foi escrito
+    // Miniaturas do que foi escrito
     requestAnimationFrame(() => {
-      weekGrid.querySelectorAll('.week-note-thumb').forEach(cvs => {
+      weekGrid.querySelectorAll('.wk-thumb').forEach(cvs => {
         const dd = drawingStore[cvs.dataset.key];
-        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 2, bottom: 2, left: 2, right: 2 }, lineScale: 0.5 });
+        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 1, bottom: 1, left: 1, right: 1 }, lineScale: 0.5 });
       });
     });
 
-    // Toque numa anotação leva ao dia naquele horário
-    weekGrid.querySelectorAll('.week-note').forEach(el => {
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const parts = el.dataset.goto.split('-');
-        App.setState({ currentDate: new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])) });
+    // Tocar numa célula abre aquele dia
+    weekGrid.querySelectorAll('.wk-cell').forEach(el => {
+      el.addEventListener('click', () => {
+        const p = el.dataset.goto.split('-');
+        App.setState({ currentDate: new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2])) });
         switchView('day');
-      });
-    });
-
-    weekGrid.querySelectorAll('[data-event-id]').forEach(el => {
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const evt = App.events.find(ev => ev.id === el.dataset.eventId);
-        if (evt) showDetail(evt);
       });
     });
   }

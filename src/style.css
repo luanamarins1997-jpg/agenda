@@ -67,6 +67,67 @@
   letter-spacing: 0.02em;
   transform: rotate(-0.5deg);
 }
+/* --- Semana: grade de horas x 7 dias --- */
+.wk-head {
+  display: grid;
+  grid-template-columns: 46px repeat(7, 1fr);
+  flex-shrink: 0;
+  border-bottom: 1px solid #c2c6d5;
+  background: #faf9fe;
+}
+.wk-corner { border-right: 1px solid #c2c6d5; }
+.wk-head-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 0;
+  border-right: 1px solid #e5e5ea;
+  line-height: 1.05;
+}
+.wk-today-head { background: #0459c5; }
+.wk-dayname {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  color: #5f5e5e;
+}
+.wk-today-head .wk-dayname { color: rgba(255,255,255,0.85); }
+.wk-daynum {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1b1f;
+}
+.wk-today-head .wk-daynum { color: #fff; }
+.wk-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 46px repeat(7, 1fr);
+  grid-auto-rows: minmax(30px, 1fr);
+  overflow-y: auto;
+}
+.wk-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: #1a1b1f;
+  opacity: 0.4;
+  text-align: right;
+  padding: 2px 4px 0 0;
+  border-right: 1px solid #c2c6d5;
+  border-top: 1px solid #eeedf3;
+}
+.wk-cell {
+  position: relative;
+  border-right: 1px solid #eeedf3;
+  border-top: 1px solid #eeedf3;
+  cursor: pointer;
+}
+.wk-cell:hover { background: rgba(4, 89, 197, 0.03); }
+.wk-today-col { background: rgba(4, 89, 197, 0.045); }
+.wk-thumb { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
 .time-slot {
   min-height: 80px;
   border-bottom: 1px solid #e5e5ea;

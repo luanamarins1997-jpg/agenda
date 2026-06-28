@@ -278,12 +278,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     weekGrid.innerHTML = html;
 
-    // Miniaturas do que foi escrito
+    // Miniaturas do que foi escrito (traço mais encorpado e sem margem, p/ legibilidade)
     requestAnimationFrame(() => {
       weekGrid.querySelectorAll('.wk-thumb').forEach(cvs => {
         const dd = drawingStore[cvs.dataset.key];
-        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 1, bottom: 1, left: 1, right: 1 }, lineScale: 0.5 });
+        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 1, bottom: 1, left: 1, right: 1 }, lineScale: 1.1 });
       });
+
+      // Abre a semana já no primeiro horário com algo escrito (senão 7h)
+      const body = weekGrid.querySelector('.wk-body');
+      if (body) {
+        let firstHour = -1;
+        for (let h = 0; h < 24 && firstHour < 0; h++) {
+          for (const dt of days) {
+            if (drawingStore[`${App.formatDate(dt)}-${h}`]?.strokes?.length) { firstHour = h; break; }
+          }
+        }
+        const targetHour = firstHour >= 0 ? Math.max(0, firstHour - 1) : 7;
+        body.scrollTop = (targetHour / 24) * body.scrollHeight;
+      }
     });
 
     // Tocar numa célula abre aquele dia

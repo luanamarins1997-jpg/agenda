@@ -270,44 +270,47 @@ document.addEventListener('DOMContentLoaded', () => {
       const ds = App.formatDate(dt);
       const isToday = ds === todayStr;
 
-      // Coleta desenhos escritos neste dia (até 3 miniaturas)
-      const thumbs = [];
-      for (let h = 0; h < 24; h++) {
-        const d2 = drawingStore[`${ds}-${h}`];
-        if (d2?.strokes?.length) thumbs.push({ h, key: `${ds}-${h}` });
-        if (thumbs.length >= 3) break;
+      // Pega o melhor preview do dia: highlight ou primeiro horário escrito
+      let previewKey = null, previewStrokes = null;
+      const hData = drawingStore[`${ds}-highlight`];
+      if (hData?.strokes?.length > 0) {
+        previewKey = `${ds}-highlight`;
+        previewStrokes = hData.strokes;
+      } else {
+        for (let h = 0; h < 24; h++) {
+          const d2 = drawingStore[`${ds}-${h}`];
+          if (d2?.strokes?.length) { previewKey = `${ds}-${h}`; previewStrokes = d2.strokes; break; }
+        }
       }
 
-      html += `<div class="flex flex-col flex-1 border-r border-outline-variant/50 ${isToday ? 'bg-primary/[0.03]' : ''}" data-goto="${ds}">`;
+      html += `<div class="flex flex-col flex-1 border-r border-outline-variant/50 cursor-pointer ${isToday ? 'bg-primary/[0.03]' : ''}" data-goto="${ds}">`;
       // Topo: nome do dia + número
-      html += `<div class="flex flex-col items-center py-3 border-b border-outline-variant ${isToday ? 'bg-primary text-white' : ''}">`;
+      html += `<div class="flex flex-col items-center py-2.5 border-b border-outline-variant ${isToday ? 'bg-primary text-white' : ''}">`;
       html += `<span class="font-label-mono text-[9px] ${isToday ? 'text-white/80' : 'text-secondary'}">${App.getDayName(dt.getDay())}</span>`;
-      html += `<span class="font-headline-sm text-[20px] ${isToday ? 'text-white' : 'text-on-surface'} leading-tight">${dt.getDate()}</span>`;
+      html += `<span class="font-headline-sm text-[18px] ${isToday ? 'text-white' : 'text-on-surface'} leading-tight">${dt.getDate()}</span>`;
       html += `</div>`;
-      // Meio: miniaturas dos desenhos
-      html += `<div class="flex-1 flex flex-col items-center justify-center p-1 gap-1.5">`;
-      if (thumbs.length > 0) {
-        thumbs.forEach(t => {
-          html += `<div class="relative w-[90%] rounded-lg overflow-hidden border border-outline-variant/30 bg-white" style="aspect-ratio:2/1">`;
-          html += `<canvas class="absolute inset-0 w-full h-full wk-thumb" data-key="${t.key}"></canvas>`;
-          html += `</div>`;
-        });
+      // Meio: preview único maior
+      html += `<div class="flex-1 flex flex-col items-center justify-center p-2">`;
+      if (previewStrokes) {
+        html += `<div class="relative w-full flex-1 rounded-lg overflow-hidden bg-white border border-outline-variant/20">`;
+        html += `<canvas class="absolute inset-0 w-full h-full wk-thumb" data-key="${previewKey}"></canvas>`;
+        html += `</div>`;
       } else {
         html += `<span class="text-[18px] text-outline-variant/60">—</span>`;
       }
       html += `</div>`;
       // Fim: linha sutil
-      html += `<div class="h-1 ${isToday ? 'bg-primary' : 'bg-outline-variant/20'}"></div>`;
+      html += `<div class="h-1 shrink-0 ${isToday ? 'bg-primary' : previewStrokes ? 'bg-primary/30' : 'bg-outline-variant/20'}"></div>`;
       html += `</div>`;
     }
 
     weekGrid.innerHTML = html;
 
-    // Renderiza miniaturas
+    // Renderiza preview
     requestAnimationFrame(() => {
       weekGrid.querySelectorAll('.wk-thumb').forEach(cvs => {
         const dd = drawingStore[cvs.dataset.key];
-        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 3, bottom: 3, left: 4, right: 4 }, lineScale: 0.3 });
+        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 6, bottom: 6, left: 6, right: 6 }, lineScale: 0.6 });
       });
     });
 

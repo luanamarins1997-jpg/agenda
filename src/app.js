@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(() => {
       weekGrid.querySelectorAll('.wk-thumb').forEach(cvs => {
         const dd = drawingStore[cvs.dataset.key];
-        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 4, bottom: 4, left: 6, right: 6 }, lineScale: 0.8 });
+        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 3, bottom: 3, left: 4, right: 4 }, lineScale: 0.3 });
       });
     });
 

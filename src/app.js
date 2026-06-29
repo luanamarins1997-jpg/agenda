@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(() => {
       weekGrid.querySelectorAll('.wk-card').forEach(cvs => {
         const dd = drawingStore[cvs.dataset.key];
-        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 6, bottom: 6, left: 8, right: 8 }, lineScale: 0.65 });
+        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 6, bottom: 6, left: 8, right: 8 }, lineScale: 0.3 });
       });
     });
 

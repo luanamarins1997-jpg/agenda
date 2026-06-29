@@ -67,22 +67,34 @@
   letter-spacing: 0.02em;
   transform: rotate(-0.5deg);
 }
-/* --- Semana: grade de horas x 7 dias --- */
-.wk-head {
+/* --- Semana: grade de horas x 7 dias (rola na vertical e horizontal) --- */
+.wk-grid {
   display: grid;
-  grid-template-columns: 46px repeat(7, 1fr);
-  flex-shrink: 0;
-  border-bottom: 1px solid #c2c6d5;
-  background: #faf9fe;
+  grid-template-columns: 46px repeat(7, minmax(230px, 1fr));
+  grid-template-rows: 46px;
+  grid-auto-rows: 96px;
 }
-.wk-corner { border-right: 1px solid #c2c6d5; }
+.wk-corner {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  background: #faf9fe;
+  border-right: 1px solid #c2c6d5;
+  border-bottom: 1px solid #c2c6d5;
+}
 .wk-head-cell {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 5px 0;
+  background: #faf9fe;
   border-right: 1px solid #e5e5ea;
+  border-bottom: 1px solid #c2c6d5;
   line-height: 1.05;
 }
 .wk-today-head { background: #0459c5; }
@@ -100,21 +112,17 @@
   color: #1a1b1f;
 }
 .wk-today-head .wk-daynum { color: #fff; }
-.wk-body {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: 46px repeat(7, 1fr);
-  grid-auto-rows: minmax(80px, 1fr);
-  overflow-y: auto;
-}
 .wk-time {
+  position: sticky;
+  left: 0;
+  z-index: 1;
   font-family: 'JetBrains Mono', monospace;
   font-size: 9px;
   color: #1a1b1f;
   opacity: 0.4;
   text-align: right;
   padding: 2px 4px 0 0;
+  background: #faf9fe;
   border-right: 1px solid #c2c6d5;
   border-top: 1px solid #eeedf3;
 }

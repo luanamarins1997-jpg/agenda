@@ -272,8 +272,8 @@ document.addEventListener('DOMContentLoaded', () => {
       days.push(dt);
     }
 
-    // Cabeçalho: canto vazio + 7 dias
-    let html = `<div class="wk-head">`;
+    // Grade única (cabeçalho e coluna de horas fixos; rola na vertical e horizontal)
+    let html = `<div class="wk-grid">`;
     html += `<div class="wk-corner"></div>`;
     days.forEach(dt => {
       const ds = App.formatDate(dt);
@@ -283,10 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `<span class="wk-daynum">${dt.getDate()}</span>`;
       html += `</div>`;
     });
-    html += `</div>`;
-
-    // Corpo: 24 linhas de hora
-    html += `<div class="wk-body">`;
     for (let h = 0; h < 24; h++) {
       html += `<div class="wk-time">${App.formatTime(h, 0)}</div>`;
       days.forEach(dt => {
@@ -303,25 +299,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     weekGrid.innerHTML = html;
 
-    // Miniaturas do que foi escrito (traço mais encorpado e sem margem, p/ legibilidade)
+    // Miniaturas do que foi escrito (traço encorpado, sem margem, p/ legibilidade)
     requestAnimationFrame(() => {
       weekGrid.querySelectorAll('.wk-thumb').forEach(cvs => {
         const dd = drawingStore[cvs.dataset.key];
-        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 1, bottom: 1, left: 1, right: 1 }, lineScale: 1.1 });
+        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 2, bottom: 2, left: 3, right: 3 }, lineScale: 1.1 });
       });
 
       // Abre a semana já no primeiro horário com algo escrito (senão 7h)
-      const body = weekGrid.querySelector('.wk-body');
-      if (body) {
-        let firstHour = -1;
-        for (let h = 0; h < 24 && firstHour < 0; h++) {
-          for (const dt of days) {
-            if (drawingStore[`${App.formatDate(dt)}-${h}`]?.strokes?.length) { firstHour = h; break; }
-          }
+      let firstHour = -1;
+      for (let h = 0; h < 24 && firstHour < 0; h++) {
+        for (const dt of days) {
+          if (drawingStore[`${App.formatDate(dt)}-${h}`]?.strokes?.length) { firstHour = h; break; }
         }
-        const targetHour = firstHour >= 0 ? Math.max(0, firstHour - 1) : 7;
-        body.scrollTop = (targetHour / 24) * body.scrollHeight;
       }
+      const targetHour = firstHour >= 0 ? Math.max(0, firstHour - 1) : 7;
+      const cell = weekGrid.querySelector('.wk-cell');
+      const rowH = cell ? cell.getBoundingClientRect().height : 88;
+      weekGrid.scrollTop = targetHour * rowH;
+      // Centraliza horizontalmente o dia de hoje
+      const todayHead = weekGrid.querySelector('.wk-today-head');
+      if (todayHead) weekGrid.scrollLeft = Math.max(0, todayHead.offsetLeft - weekGrid.clientWidth / 2);
     });
 
     // Tocar numa célula abre aquele dia

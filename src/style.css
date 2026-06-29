@@ -67,7 +67,47 @@
   letter-spacing: 0.02em;
   transform: rotate(-0.5deg);
 }
-/* --- Semana: lista vertical de dias, com quadradinhos do que foi escrito --- */
+/* --- Semana: lista vertical; cada hora escrita ocupa a largura toda (legível) --- */
+.wk-day { border-bottom: 6px solid #eeedf3; }
+.wk-day-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #faf9fe;
+  border-bottom: 1px solid #c2c6d5;
+}
+.wk-day-today .wk-day-head { background: #0459c5; }
+.wk-dayname { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.05em; color: #5f5e5e; }
+.wk-daynum { font-family: 'Hanken Grotesk', sans-serif; font-size: 18px; font-weight: 600; color: #1a1b1f; }
+.wk-day-today .wk-dayname { color: rgba(255,255,255,0.85); }
+.wk-day-today .wk-daynum { color: #fff; }
+.wk-row {
+  display: flex;
+  align-items: stretch;
+  border-top: 1px solid #eeedf3;
+  cursor: pointer;
+}
+.wk-row:hover { background: rgba(4, 89, 197, 0.03); }
+.wk-row-time {
+  width: 50px;
+  flex-shrink: 0;
+  text-align: right;
+  padding: 6px 8px 0 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #1a1b1f;
+  opacity: 0.45;
+}
+.wk-card { flex: 1; min-width: 0; height: 104px; display: block; }
+.wk-event { display: flex; align-items: flex-start; border-top: 1px solid #eeedf3; padding: 6px 0; cursor: pointer; }
+.wk-event-body { flex: 1; min-width: 0; padding-right: 12px; }
+.wk-event-title { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: #1a1b1f; }
+.wk-event-desc { font-size: 10px; color: #737784; }
+.wk-none { padding: 10px 14px; color: #c2c6d5; font-size: 14px; }
 .wk-thumb { display: block; }
 
 .time-slot {

@@ -46,6 +46,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const highlightTool = { color: '#1a1b1f', erasing: false };
   const notesTool = { color: '#1a1b1f', erasing: false };
   let notesInstance = null;
+  let notesZoom = null;
+  const weekTasksTool = { color: '#1a1b1f', erasing: false };
+  let weekTasksPanelInst = null;
+  let sidebarCollapsed = App.load('sidebarCollapsed', false);
+
+  const weekTasksKey = (dt) => `weektasks-${App.formatDate(getWeekStart(dt))}`;
 
 
   // --- Navigation ---
@@ -56,9 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navBtns.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.view === viewName);
     });
-    if (daySidebar) {
-      daySidebar.classList.toggle('hidden', viewName !== 'day');
-    }
+    applySidebar(viewName);
     if (notesFab) {
       notesFab.classList.toggle('hidden', viewName !== 'notes');
     }
@@ -80,6 +84,27 @@ document.addEventListener('DOMContentLoaded', () => {
   navBtns.forEach(btn => {
     btn.addEventListener('click', () => switchView(btn.dataset.view));
   });
+
+  // Painel lateral do dia: abrir/fechar
+  function applySidebar(viewName) {
+    const isDay = viewName === 'day';
+    const reopen = document.getElementById('sidebar-reopen-btn');
+    if (daySidebar) daySidebar.classList.toggle('hidden', !isDay || sidebarCollapsed);
+    if (reopen) reopen.classList.toggle('hidden', !(isDay && sidebarCollapsed));
+  }
+  {
+    const collapseBtn = document.getElementById('sidebar-collapse-btn');
+    const reopenBtn = document.getElementById('sidebar-reopen-btn');
+    if (collapseBtn) collapseBtn.addEventListener('click', () => {
+      sidebarCollapsed = true; App.save('sidebarCollapsed', true);
+      applySidebar(App.getState().currentView);
+    });
+    if (reopenBtn) reopenBtn.addEventListener('click', () => {
+      sidebarCollapsed = false; App.save('sidebarCollapsed', false);
+      applySidebar(App.getState().currentView);
+      updateDaySidebar();
+    });
+  }
 
   // --- Top Bar ---
   function updateTopBar() {
@@ -307,6 +332,41 @@ document.addEventListener('DOMContentLoaded', () => {
         switchView('day');
       });
     });
+
+    setupWeekTasksPanel();
+  }
+
+  // Quadro "Tarefas da semana" (editável) no topo da aba Semana, por semana
+  function setupWeekTasksPanel() {
+    const canvas = document.getElementById('weektasks-panel-canvas');
+    if (!canvas) return;
+    const hint = document.getElementById('weektasks-panel-hint');
+    if (!weekTasksPanelInst) {
+      weekTasksPanelInst = initCanvas(canvas, 0, 'wt', {
+        tool: weekTasksTool,
+        oversample: 2,
+        onStroke: () => { if (hint) hint.style.display = 'none'; }
+      });
+      const toolsEl = document.getElementById('weektasks-panel-tools');
+      if (toolsEl && !toolsEl.childElementCount) {
+        toolsEl.appendChild(buildDrawTools(weekTasksTool, {
+          onUndo: () => weekTasksPanelInst.undoLast(),
+          onClear: () => { weekTasksPanelInst.clear(); if (hint) hint.style.display = ''; }
+        }));
+      }
+      const toggle = document.getElementById('weektasks-toggle');
+      const body = document.getElementById('weektasks-panel-body');
+      if (toggle && body) {
+        toggle.addEventListener('click', () => {
+          const hidden = body.classList.toggle('hidden');
+          toggle.querySelector('.material-symbols-outlined').textContent = hidden ? 'expand_more' : 'expand_less';
+          if (!hidden) requestAnimationFrame(() => weekTasksPanelInst.redraw());
+        });
+      }
+    }
+    weekTasksPanelInst.reload(weekTasksKey(App.getState().currentDate));
+    if (hint) hint.style.display = weekTasksPanelInst.hasStrokes() ? 'none' : '';
+    requestAnimationFrame(() => weekTasksPanelInst.redraw());
   }
 
   // --- Drawing Store ---
@@ -1020,6 +1080,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     notesInstance.reload(noteKey(editingNoteId));
     if (notesCanvasHint) notesCanvasHint.style.display = notesInstance.hasStrokes() ? 'none' : '';
+
+    // Zoom (dois dedos) no canvas da nota — reaproveita o motor de pan/zoom do dia
+    if (!notesZoom) {
+      const wrap = document.getElementById('notes-canvas-wrap');
+      const layer = document.getElementById('notes-zoom-layer');
+      if (wrap && layer) notesZoom = setupDayZoom(wrap, layer);
+    }
+    if (notesZoom) notesZoom.reset();
+
     // Garante o redimensionamento correto agora que o editor está visível
     requestAnimationFrame(() => notesInstance.redraw());
   }
@@ -1077,6 +1146,18 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebarDayName.textContent = App.getFullDayName(d.getDay());
     sidebarDayNumber.textContent = d.getDate();
     sidebarDayMonth.textContent = `${App.getMonthName(d.getMonth()).toUpperCase()} ${d.getFullYear()}`;
+
+    // Prévia (somente leitura) das tarefas da semana atual
+    const cvs = document.getElementById('weektasks-sidebar-canvas');
+    const empty = document.getElementById('weektasks-sidebar-empty');
+    if (cvs) {
+      const dd = drawingStore[weekTasksKey(d)];
+      const has = dd?.strokes?.length;
+      if (empty) empty.style.display = has ? 'none' : '';
+      const ctx = cvs.getContext('2d');
+      ctx.clearRect(0, 0, cvs.width, cvs.height);
+      if (has) requestAnimationFrame(() => drawStrokesPreview(cvs, dd.strokes, { pad: { top: 6, bottom: 6, left: 6, right: 6 }, lineScale: 0.6 }));
+    }
   }
 
   // --- Sidebar Next Event ---

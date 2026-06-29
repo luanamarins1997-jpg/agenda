@@ -231,12 +231,10 @@ document.addEventListener('DOMContentLoaded', () => {
     monthGrid.querySelectorAll('.day-cell').forEach(cell => {
       const ds = cell.dataset.date;
       if (ds) {
-        const hData = drawingStore[`${ds}-highlight`];
-        if (hData?.strokes?.length > 0) {
-          const cvs = document.createElement('canvas');
-          cvs.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
-          requestAnimationFrame(() => drawStrokesPreview(cvs, hData.strokes, { pad: { top: 22, bottom: 4, left: 4, right: 4 }, lineScale: 0.4 }));
-          cell.appendChild(cvs);
+        if (drawingStore[`${ds}-highlight`]?.strokes?.length > 0) {
+          const dot = document.createElement('div');
+          dot.className = 'absolute bottom-1 right-1 w-2 h-2 rounded-full bg-primary/40';
+          cell.appendChild(dot);
         }
       }
       cell.addEventListener('click', () => {

@@ -263,78 +263,60 @@ document.addEventListener('DOMContentLoaded', () => {
     const start = getWeekStart(d);
     const todayStr = App.getTodayStr();
 
-    let html = '';
+    // Preenche os 7 retângulos de dia (grade 4x2; o 8º é o quadro de tarefas)
     for (let i = 0; i < 7; i++) {
       const dt = new Date(start);
       dt.setDate(start.getDate() + i);
       const ds = App.formatDate(dt);
       const isToday = ds === todayStr;
+      const cell = weekGrid.querySelector(`.wk-cell[data-slot="${i}"]`);
+      if (!cell) continue;
 
-      // Coleta o que foi escrito: destaque + cada horário + eventos
-      const cards = [];
+      const items = [];
       const hData = drawingStore[`${ds}-highlight`];
-      if (hData?.strokes?.length) cards.push({ type: 'draw', key: `${ds}-highlight`, label: 'Destaque' });
+      if (hData?.strokes?.length) items.push({ key: `${ds}-highlight`, label: 'Destaque' });
       for (let h = 0; h < 24; h++) {
-        const d2 = drawingStore[`${ds}-${h}`];
-        if (d2?.strokes?.length) cards.push({ type: 'draw', key: `${ds}-${h}`, label: App.formatTime(h, 0) });
+        if (drawingStore[`${ds}-${h}`]?.strokes?.length) items.push({ key: `${ds}-${h}`, label: App.formatTime(h, 0) });
       }
-      const evts = App.getEventsForDate ? App.getEventsForDate(ds) : [];
-      evts.slice(0, 3).forEach(ev => cards.push({ type: 'event', title: ev.title, time: ev.startTime, desc: ev.description }));
 
-      html += `<div class="wk-day ${isToday ? 'wk-day-today' : ''}" data-goto="${ds}">`;
-      html += `<div class="wk-day-head">`;
-      html += `<span class="wk-dayname">${App.getDayName(dt.getDay())}</span>`;
-      html += `<span class="wk-daynum">${dt.getDate()}</span>`;
-      html += `</div>`;
-      if (cards.length) {
-        cards.forEach(card => {
-          if (card.type === 'event') {
-            html += `<div class="wk-event event-card" data-goto="${ds}">`;
-            html += `<span class="wk-row-time">${card.time || 'Dia'}</span>`;
-            html += `<div class="wk-event-body"><div class="wk-event-title">${card.title}</div>${card.desc ? `<div class="wk-event-desc">${card.desc}</div>` : ''}</div>`;
-            html += `</div>`;
-          } else {
-            html += `<div class="wk-row draw-card" data-key="${card.key}" data-goto="${ds}">`;
-            html += `<span class="wk-row-time">${card.label}</span>`;
-            html += `<canvas class="wk-card" data-key="${card.key}"></canvas>`;
-            html += `</div>`;
-          }
+      let inner = `<div class="wk-cell-head ${isToday ? 'wk-cell-today' : ''}">`;
+      inner += `<span class="wk-dayname">${App.getDayName(dt.getDay())}</span>`;
+      inner += `<span class="wk-daynum">${dt.getDate()}</span>`;
+      inner += `</div>`;
+      inner += `<div class="wk-cell-body" data-goto="${ds}">`;
+      if (items.length) {
+        items.forEach(it => {
+          inner += `<div class="wk-mini">`;
+          inner += `<span class="wk-mini-time">${it.label}</span>`;
+          inner += `<canvas class="wk-card" data-key="${it.key}"></canvas>`;
+          inner += `</div>`;
         });
       } else {
-        html += `<div class="wk-none">—</div>`;
+        inner += `<span class="wk-none">—</span>`;
       }
-      html += `</div>`;
+      inner += `</div>`;
+      cell.className = `wk-cell wk-day-cell ${isToday ? 'wk-cell-is-today' : ''}`;
+      cell.innerHTML = inner;
     }
 
-    weekGrid.innerHTML = html;
-
-    // Renderiza os desenhos em largura total (legível)
+    // Desenha as miniaturas
     requestAnimationFrame(() => {
       weekGrid.querySelectorAll('.wk-card').forEach(cvs => {
         const dd = drawingStore[cvs.dataset.key];
-        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 4, bottom: 4, left: 8, right: 8 }, lineScale: 0.8 });
+        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 3, bottom: 3, left: 5, right: 5 }, lineScale: 0.85 });
       });
-      const today = weekGrid.querySelector('.wk-day-today');
-      if (today) weekGrid.scrollTop = Math.max(0, today.offsetTop - 6);
     });
 
-    // Clique no desenho/dia → abre o dia
-    weekGrid.querySelectorAll('.draw-card, .event-card').forEach(el => {
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
+    // Tocar no corpo de um dia abre aquele dia
+    weekGrid.querySelectorAll('.wk-cell-body[data-goto]').forEach(el => {
+      el.addEventListener('click', () => {
         const p = el.dataset.goto.split('-');
         App.setState({ currentDate: new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2])) });
         switchView('day');
       });
     });
-    weekGrid.querySelectorAll('.wk-day').forEach(el => {
-      el.addEventListener('click', (e) => {
-        if (e.target.closest('.draw-card') || e.target.closest('.event-card')) return;
-        const p = el.dataset.goto.split('-');
-        App.setState({ currentDate: new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2])) });
-        switchView('day');
-      });
-    });
+
+    setupWeekTasksPanel();
   }
 
   // Quadro "Tarefas da semana" (editável) no topo da aba Semana, por semana

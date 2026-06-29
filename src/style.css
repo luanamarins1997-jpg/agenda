@@ -67,47 +67,59 @@
   letter-spacing: 0.02em;
   transform: rotate(-0.5deg);
 }
-/* --- Semana: lista vertical; cada hora escrita ocupa a largura toda (legível) --- */
-.wk-day { border-bottom: 6px solid #eeedf3; }
-.wk-day-head {
-  position: sticky;
-  top: 0;
-  z-index: 2;
+/* --- Semana: grade 4x2 (7 dias + Tarefas), tudo na tela --- */
+#week-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 6px;
+  padding: 6px;
+}
+.wk-cell {
+  border: 1px solid #e5e5ea;
+  border-radius: 10px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  min-width: 0;
+}
+.wk-cell-is-today { border-color: rgba(4, 89, 197, 0.5); }
+.wk-cell-head {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  padding: 6px 14px;
+  gap: 6px;
+  padding: 4px 8px;
+  border-bottom: 1px solid #eeedf3;
   background: #faf9fe;
-  border-bottom: 1px solid #c2c6d5;
+  flex-shrink: 0;
 }
-.wk-day-today .wk-day-head { background: #0459c5; }
-.wk-dayname { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.05em; color: #5f5e5e; }
-.wk-daynum { font-family: 'Hanken Grotesk', sans-serif; font-size: 18px; font-weight: 600; color: #1a1b1f; }
-.wk-day-today .wk-dayname { color: rgba(255,255,255,0.85); }
-.wk-day-today .wk-daynum { color: #fff; }
-.wk-row {
+.wk-cell-today { background: #0459c5; }
+.wk-dayname { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.05em; color: #5f5e5e; }
+.wk-daynum { font-family: 'Hanken Grotesk', sans-serif; font-size: 16px; font-weight: 600; color: #1a1b1f; line-height: 1; }
+.wk-cell-today .wk-dayname { color: rgba(255,255,255,0.85); }
+.wk-cell-today .wk-daynum { color: #fff; }
+.wk-cell-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
-  align-items: stretch;
-  border-top: 1px solid #eeedf3;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
   cursor: pointer;
 }
-.wk-row:hover { background: rgba(4, 89, 197, 0.03); }
-.wk-row-time {
-  width: 50px;
-  flex-shrink: 0;
-  text-align: right;
-  padding: 6px 8px 0 0;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: #1a1b1f;
-  opacity: 0.45;
-}
-.wk-card { flex: 1; min-width: 0; height: 104px; display: block; }
-.wk-event { display: flex; align-items: flex-start; border-top: 1px solid #eeedf3; padding: 6px 0; cursor: pointer; }
-.wk-event-body { flex: 1; min-width: 0; padding-right: 12px; }
-.wk-event-title { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: #1a1b1f; }
-.wk-event-desc { font-size: 10px; color: #737784; }
-.wk-none { padding: 10px 14px; color: #c2c6d5; font-size: 14px; }
+.wk-mini { display: flex; flex-direction: column; }
+.wk-mini-time { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #0459c5; opacity: 0.7; }
+.wk-card { width: 100%; height: 76px; display: block; border: 1px solid #f0f0f3; border-radius: 4px; }
+.wk-none { margin: auto; color: #c2c6d5; font-size: 14px; }
+/* Célula do quadro de tarefas (8º retângulo) */
+.wk-tasks-head { background: rgba(4, 89, 197, 0.06); }
+.wk-cell-title { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: #0459c5; }
+.wk-tasks-body { position: relative; flex: 1; min-height: 0; }
 .wk-thumb { display: block; }
 
 .time-slot {

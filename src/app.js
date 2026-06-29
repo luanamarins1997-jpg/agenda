@@ -259,79 +259,69 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Weekly Calendar (grade de horas x 7 dias, com a escrita à caneta) ---
+  // --- Weekly Calendar (7 colunas horizontais, sem scroll) ---
   function renderWeek() {
     const d = App.getState().currentDate;
     const start = getWeekStart(d);
     const todayStr = App.getTodayStr();
 
-    const days = [];
+    let html = '';
     for (let i = 0; i < 7; i++) {
       const dt = new Date(start);
       dt.setDate(start.getDate() + i);
-      days.push(dt);
-    }
-
-    // Grade única (cabeçalho e coluna de horas fixos; rola na vertical e horizontal)
-    let html = `<div class="wk-grid">`;
-    html += `<div class="wk-corner"></div>`;
-    days.forEach(dt => {
       const ds = App.formatDate(dt);
       const isToday = ds === todayStr;
-      html += `<div class="wk-head-cell ${isToday ? 'wk-today-head' : ''}">`;
-      html += `<span class="wk-dayname">${App.getDayName(dt.getDay())}</span>`;
-      html += `<span class="wk-daynum">${dt.getDate()}</span>`;
+
+      // Coleta desenhos escritos neste dia (até 3 miniaturas)
+      const thumbs = [];
+      for (let h = 0; h < 24; h++) {
+        const d2 = drawingStore[`${ds}-${h}`];
+        if (d2?.strokes?.length) thumbs.push({ h, key: `${ds}-${h}` });
+        if (thumbs.length >= 3) break;
+      }
+
+      html += `<div class="flex flex-col flex-1 border-r border-outline-variant/50 ${isToday ? 'bg-primary/[0.03]' : ''}" data-goto="${ds}">`;
+      // Topo: nome do dia + número
+      html += `<div class="flex flex-col items-center py-3 border-b border-outline-variant ${isToday ? 'bg-primary text-white' : ''}">`;
+      html += `<span class="font-label-mono text-[9px] ${isToday ? 'text-white/80' : 'text-secondary'}">${App.getDayName(dt.getDay())}</span>`;
+      html += `<span class="font-headline-sm text-[20px] ${isToday ? 'text-white' : 'text-on-surface'} leading-tight">${dt.getDate()}</span>`;
       html += `</div>`;
-    });
-    for (let h = 0; h < 24; h++) {
-      html += `<div class="wk-time">${App.formatTime(h, 0)}</div>`;
-      days.forEach(dt => {
-        const ds = App.formatDate(dt);
-        const isToday = ds === todayStr;
-        const key = `${ds}-${h}`;
-        const has = drawingStore[key]?.strokes?.length;
-        html += `<div class="wk-cell ${isToday ? 'wk-today-col' : ''}" data-goto="${ds}">`;
-        if (has) html += `<canvas class="wk-thumb" data-key="${key}"></canvas>`;
-        html += `</div>`;
-      });
+      // Meio: miniaturas dos desenhos
+      html += `<div class="flex-1 flex flex-col items-center justify-center p-1 gap-1.5">`;
+      if (thumbs.length > 0) {
+        thumbs.forEach(t => {
+          html += `<div class="relative w-[90%] rounded-lg overflow-hidden border border-outline-variant/30 bg-white" style="aspect-ratio:2/1">`;
+          html += `<canvas class="absolute inset-0 w-full h-full wk-thumb" data-key="${t.key}"></canvas>`;
+          html += `</div>`;
+        });
+      } else {
+        html += `<span class="text-[18px] text-outline-variant/60">—</span>`;
+      }
+      html += `</div>`;
+      // Fim: linha sutil
+      html += `<div class="h-1 ${isToday ? 'bg-primary' : 'bg-outline-variant/20'}"></div>`;
+      html += `</div>`;
     }
-    html += `</div>`;
 
     weekGrid.innerHTML = html;
 
-    // Miniaturas do que foi escrito (traço encorpado, sem margem, p/ legibilidade)
+    // Renderiza miniaturas
     requestAnimationFrame(() => {
       weekGrid.querySelectorAll('.wk-thumb').forEach(cvs => {
         const dd = drawingStore[cvs.dataset.key];
-        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 2, bottom: 2, left: 3, right: 3 }, lineScale: 1.1 });
+        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 4, bottom: 4, left: 6, right: 6 }, lineScale: 0.8 });
       });
-
-      // Abre a semana já no primeiro horário com algo escrito (senão 7h)
-      let firstHour = -1;
-      for (let h = 0; h < 24 && firstHour < 0; h++) {
-        for (const dt of days) {
-          if (drawingStore[`${App.formatDate(dt)}-${h}`]?.strokes?.length) { firstHour = h; break; }
-        }
-      }
-      const targetHour = firstHour >= 0 ? Math.max(0, firstHour - 1) : 7;
-      const cell = weekGrid.querySelector('.wk-cell');
-      const rowH = cell ? cell.getBoundingClientRect().height : 88;
-      weekGrid.scrollTop = targetHour * rowH;
-      // Centraliza horizontalmente o dia de hoje
-      const todayHead = weekGrid.querySelector('.wk-today-head');
-      if (todayHead) weekGrid.scrollLeft = Math.max(0, todayHead.offsetLeft - weekGrid.clientWidth / 2);
     });
 
-    // Tocar numa célula abre aquele dia
-    weekGrid.querySelectorAll('.wk-cell').forEach(el => {
-      el.addEventListener('click', () => {
+    // Clique no dia → vai para visão DIA
+    weekGrid.querySelectorAll('[data-goto]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('.wk-thumb')) return;
         const p = el.dataset.goto.split('-');
         App.setState({ currentDate: new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2])) });
         switchView('day');
       });
     });
-
-    setupWeekTasksPanel();
   }
 
   // Quadro "Tarefas da semana" (editável) no topo da aba Semana, por semana

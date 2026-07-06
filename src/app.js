@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(() => {
       weekGrid.querySelectorAll('.wk-card').forEach(cvs => {
         const dd = drawingStore[cvs.dataset.key];
-        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 5, bottom: 5, left: 8, right: 8 }, lineScale: 0.3, alignLeft: true, maxScale: 0.55 });
+        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 5, bottom: 5, left: 8, right: 8 }, lineScale: 0.3, alignLeft: true, maxScale: 0.55, noFitWidth: true });
       });
     });
 
@@ -428,9 +428,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dw < 6 || dh < 6) return;
     const dpr = (window.devicePixelRatio || 1) * 2;
     cvs.width = w * dpr; cvs.height = h * dpr;
-    let s = Math.min(dw / rangeX, dh / rangeY) * 0.92;
-    // maxScale: teto de escala — frases curtas não são ampliadas, letra fica
-    // do mesmo tamanho independente do comprimento (longas ainda encolhem p/ caber)
+    // noFitWidth: escala só pela ALTURA — letra sempre do mesmo tamanho;
+    // frase longa é cortada na borda direita (em vez de encolher até ficar ilegível)
+    let s = (opts.noFitWidth ? dh / rangeY : Math.min(dw / rangeX, dh / rangeY)) * 0.92;
+    // maxScale: teto — frases curtas não são ampliadas
     if (opts.maxScale) s = Math.min(s, opts.maxScale);
     // alignLeft: escrita encostada à esquerda (padrão de leitura), senão centralizada
     const offsetX = opts.alignLeft ? pad.left : pad.left + (dw - rangeX * s) / 2;

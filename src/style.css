@@ -112,13 +112,32 @@
   padding: 6px;
   cursor: pointer;
 }
-.wk-mini { display: flex; flex-direction: column; }
-.wk-mini-time { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #0459c5; opacity: 0.7; }
-.wk-card { width: 100%; height: 120px; display: block; border: 1px solid #f0f0f3; border-radius: 4px; }
+.wk-mini {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #eeedf3;
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+}
+.wk-mini-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: #0459c5;
+  opacity: 0.8;
+  padding: 2px 6px 0;
+  border-bottom: 1px solid #f4f3f8;
+}
+.wk-card { width: 100%; height: 60px; display: block; }
 .wk-none { margin: auto; color: #c2c6d5; font-size: 14px; }
 /* Célula do quadro de tarefas (8º retângulo) */
-.wk-tasks-head { background: rgba(4, 89, 197, 0.06); }
-.wk-cell-title { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: #0459c5; }
+.wk-tasks-head { background: rgba(4, 89, 197, 0.06); align-items: center; flex-wrap: wrap; row-gap: 2px; }
+.wk-cell-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.04em; text-transform: uppercase; color: #0459c5; white-space: nowrap; }
+.wk-tasks-cell .draw-tools { gap: 3px; flex-wrap: nowrap; }
+.wk-tasks-cell .draw-swatch { width: 13px; height: 13px; border-width: 1.5px; }
+.wk-tasks-cell .draw-tool-btn { width: 20px; height: 20px; }
+.wk-tasks-cell .draw-tool-btn .material-symbols-outlined { font-size: 14px; }
+.wk-tasks-cell .draw-tools-sep { display: none; }
 .wk-tasks-body { position: relative; flex: 1; min-height: 0; }
 .wk-thumb { display: block; }
 

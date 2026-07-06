@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(() => {
       weekGrid.querySelectorAll('.wk-card').forEach(cvs => {
         const dd = drawingStore[cvs.dataset.key];
-        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 6, bottom: 6, left: 8, right: 8 }, lineScale: 0.3 });
+        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 5, bottom: 5, left: 8, right: 8 }, lineScale: 0.3, alignLeft: true });
       });
     });
 
@@ -396,7 +396,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const dpr = (window.devicePixelRatio || 1) * 2;
     cvs.width = w * dpr; cvs.height = h * dpr;
     const s = Math.min(dw / rangeX, dh / rangeY) * 0.92;
-    const offsetX = pad.left + (dw - rangeX * s) / 2;
+    // alignLeft: escrita encostada à esquerda (padrão de leitura), senão centralizada
+    const offsetX = opts.alignLeft ? pad.left : pad.left + (dw - rangeX * s) / 2;
     const offsetY = pad.top + (dh - rangeY * s) / 2;
     const c = cvs.getContext('2d');
     c.scale(dpr, dpr);

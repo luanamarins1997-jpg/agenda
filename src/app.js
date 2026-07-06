@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let notesZoom = null;
   const weekTasksTool = { color: '#1a1b1f', erasing: false };
   let weekTasksPanelInst = null;
+  let weekTasksBigInst = null;
   let sidebarCollapsed = App.load('sidebarCollapsed', false);
 
   const weekTasksKey = (dt) => `weektasks-${App.formatDate(getWeekStart(dt))}`;
@@ -158,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   navToday.addEventListener('click', () => {
     App.setState({ currentDate: new Date() });
-    switchView(App.getState().currentView);
+    switchView('day'); // "Hoje" abre direto a visão do dia de hoje
   });
 
   // --- Helpers ---
@@ -303,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(() => {
       weekGrid.querySelectorAll('.wk-card').forEach(cvs => {
         const dd = drawingStore[cvs.dataset.key];
-        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 5, bottom: 5, left: 8, right: 8 }, lineScale: 0.3, alignLeft: true });
+        if (dd?.strokes?.length) drawStrokesPreview(cvs, dd.strokes, { pad: { top: 5, bottom: 5, left: 8, right: 8 }, lineScale: 0.3, alignLeft: true, maxScale: 0.55 });
       });
     });
 
@@ -344,6 +345,38 @@ document.addEventListener('DOMContentLoaded', () => {
           const hidden = body.classList.toggle('hidden');
           toggle.querySelector('.material-symbols-outlined').textContent = hidden ? 'expand_more' : 'expand_less';
           if (!hidden) requestAnimationFrame(() => weekTasksPanelInst.redraw());
+        });
+      }
+      // Ampliar: abre página cheia com o mesmo conteúdo (mesma key da semana)
+      const expandBtn = document.getElementById('weektasks-expand');
+      const overlay = document.getElementById('weektasks-overlay');
+      const closeBtn = document.getElementById('weektasks-close');
+      if (expandBtn && overlay && closeBtn) {
+        expandBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          overlay.classList.remove('hidden');
+          overlay.classList.add('flex');
+          if (!weekTasksBigInst) {
+            weekTasksBigInst = initCanvas(document.getElementById('weektasks-big-canvas'), 0, 'wtbig', { tool: weekTasksTool, oversample: 2 });
+            const bigTools = document.getElementById('weektasks-big-tools');
+            if (bigTools && !bigTools.childElementCount) {
+              bigTools.appendChild(buildDrawTools(weekTasksTool, {
+                onUndo: () => weekTasksBigInst.undoLast(),
+                onClear: () => weekTasksBigInst.clear()
+              }));
+            }
+          }
+          weekTasksBigInst.reload(weekTasksKey(App.getState().currentDate));
+          requestAnimationFrame(() => weekTasksBigInst.redraw());
+        });
+        closeBtn.addEventListener('click', () => {
+          overlay.classList.add('hidden');
+          overlay.classList.remove('flex');
+          flushSave();
+          // Sincroniza o quadrado pequeno com o que foi escrito na página cheia
+          weekTasksPanelInst.reload(weekTasksKey(App.getState().currentDate));
+          if (hint) hint.style.display = weekTasksPanelInst.hasStrokes() ? 'none' : '';
+          requestAnimationFrame(() => weekTasksPanelInst.redraw());
         });
       }
     }
@@ -395,7 +428,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dw < 6 || dh < 6) return;
     const dpr = (window.devicePixelRatio || 1) * 2;
     cvs.width = w * dpr; cvs.height = h * dpr;
-    const s = Math.min(dw / rangeX, dh / rangeY) * 0.92;
+    let s = Math.min(dw / rangeX, dh / rangeY) * 0.92;
+    // maxScale: teto de escala — frases curtas não são ampliadas, letra fica
+    // do mesmo tamanho independente do comprimento (longas ainda encolhem p/ caber)
+    if (opts.maxScale) s = Math.min(s, opts.maxScale);
     // alignLeft: escrita encostada à esquerda (padrão de leitura), senão centralizada
     const offsetX = opts.alignLeft ? pad.left : pad.left + (dw - rangeX * s) / 2;
     const offsetY = pad.top + (dh - rangeY * s) / 2;
@@ -999,7 +1035,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const month = parseInt(card.dataset.month);
         const year = parseInt(card.dataset.year);
         App.setState({ currentDate: new Date(year, month, 1) });
-  switchView(App.getState().currentView);
+        switchView('month'); // abre o calendário mensal do mês clicado
       });
     });
   }
@@ -1146,24 +1182,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Sidebar Next Event ---
   function updateNextEvent() {
-    const today = App.formatDate(new Date());
-    const todayEvents = App.getEventsForDate(today);
-    const sorted = todayEvents.sort((a, b) => {
-      if (!a.startTime) return 1;
-      if (!b.startTime) return -1;
-      return a.startTime.localeCompare(b.startTime);
-    });
-    const next = sorted.find(e => !e.completed) || todayEvents[0];
-    if (next) {
+    // Procura o próximo dia (a partir do dia visto) que tenha destaque escrito
+    const base = App.getState().currentDate || new Date();
+    let found = null;
+    for (let i = 1; i <= 14; i++) {
+      const dt = new Date(base);
+      dt.setDate(base.getDate() + i);
+      const ds = App.formatDate(dt);
+      const h = drawingStore[`${ds}-highlight`];
+      if (h?.strokes?.length) { found = { dt, ds, strokes: h.strokes }; break; }
+    }
+    if (found) {
+      const label = `${App.getFullDayName(found.dt.getDay())}, ${found.dt.getDate()} ${App.getShortMonthName(found.dt.getMonth())}`;
       sidebarNextEvent.innerHTML = `
         <h3 class="font-label-mono text-[10px] text-secondary mb-1 tracking-widest uppercase">Próximo evento</h3>
-        <p class="font-body-sm font-semibold text-on-surface">${next.title}</p>
-        <p class="font-body-sm text-secondary text-[12px]">${next.startTime || 'Dia inteiro'}${next.endTime ? ' — ' + next.endTime : ''}</p>
+        <p class="font-body-sm text-[11px] text-primary font-semibold mb-1">${label}</p>
+        <div class="relative bg-primary/5 rounded-lg overflow-hidden" style="height:64px">
+          <canvas id="next-event-canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+        </div>
       `;
+      requestAnimationFrame(() => {
+        const cvs = document.getElementById('next-event-canvas');
+        if (cvs) drawStrokesPreview(cvs, found.strokes, { pad: { top: 5, bottom: 5, left: 8, right: 8 }, lineScale: 0.35, alignLeft: true, maxScale: 0.6 });
+      });
     } else {
       sidebarNextEvent.innerHTML = `
         <h3 class="font-label-mono text-[10px] text-secondary mb-1 tracking-widest uppercase">Próximo evento</h3>
-        <p class="font-body-sm text-on-surface-variant/60">Nenhum evento hoje</p>
+        <p class="font-body-sm text-on-surface-variant/60">Nada nos próximos dias</p>
       `;
     }
   }

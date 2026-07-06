@@ -14,7 +14,7 @@
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Hanken+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="src/style.css?v=20260626m">
+  <link rel="stylesheet" href="src/style.css?v=20260626n">
   <script>
     tailwind.config = {
       darkMode: "class",
@@ -185,6 +185,9 @@
             <div class="wk-cell-head wk-tasks-head">
               <span class="wk-cell-title">Tarefas da semana</span>
               <div id="weektasks-panel-tools" class="flex items-center gap-1 ml-auto"></div>
+              <button id="weektasks-expand" title="Ampliar" class="p-0.5 rounded text-primary hover:bg-primary/10">
+                <span class="material-symbols-outlined text-[16px]">open_in_full</span>
+              </button>
             </div>
             <div class="wk-tasks-body" style="touch-action:none">
               <div class="planner-canvas absolute inset-0 pointer-events-none opacity-50"></div>
@@ -242,12 +245,27 @@
     <span class="material-symbols-outlined text-[22px]">add</span>
   </button>
 
+  <!-- Tarefas da semana — página ampliada -->
+  <div id="weektasks-overlay" class="hidden fixed inset-0 bg-surface z-40 flex-col">
+    <div class="flex items-center gap-3 px-4 py-2 border-b border-outline-variant bg-surface-container-low shrink-0">
+      <span class="font-label-mono text-[11px] text-primary uppercase tracking-widest">Tarefas da semana</span>
+      <div id="weektasks-big-tools" class="flex items-center gap-1.5 ml-auto"></div>
+      <button id="weektasks-close" title="Fechar" class="p-1.5 rounded-lg text-secondary hover:bg-surface-container-high">
+        <span class="material-symbols-outlined text-[20px]">close_fullscreen</span>
+      </button>
+    </div>
+    <div class="relative flex-1 min-h-0 m-3 bg-white rounded-xl border border-outline-variant overflow-hidden" style="touch-action:none">
+      <div class="planner-canvas absolute inset-0 pointer-events-none opacity-50"></div>
+      <canvas id="weektasks-big-canvas" class="draw-canvas absolute inset-0 w-full h-full"></canvas>
+    </div>
+  </div>
+
   <!-- Detail Overlay -->
   <div id="detail-overlay" class="hidden fixed inset-0 bg-surface/80 backdrop-blur-sm z-40 items-center justify-center p-8">
     <div id="detail-content" class="w-full max-w-lg"></div>
   </div>
 
-  <script src="src/data.js?v=20260626m"></script>
-  <script src="src/app.js?v=20260626m"></script>
+  <script src="src/data.js?v=20260626n"></script>
+  <script src="src/app.js?v=20260626n"></script>
 </body>
 </html>
